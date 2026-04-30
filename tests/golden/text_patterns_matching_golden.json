@@ -1,0 +1,66 @@
+[
+  {
+    "text": "the patient",
+    "expression": "ENT",
+    "casefold": true,
+    "span": null,
+    "word": false
+  },
+  {
+    "text": "Urgent ENT evaluation",
+    "expression": "ENT",
+    "casefold": true,
+    "span": [
+      7,
+      10
+    ],
+    "word": false
+  },
+  {
+    "text": "Start corticosteroids now",
+    "expression": "steroid",
+    "casefold": true,
+    "span": [
+      13,
+      20
+    ],
+    "word": false
+  },
+  {
+    "text": "Start corticosteroids now",
+    "expression": "steroid",
+    "casefold": true,
+    "span": null,
+    "word": true
+  },
+  {
+    "text": "Start steroid now",
+    "expression": "steroid",
+    "casefold": true,
+    "span": [
+      6,
+      13
+    ],
+    "word": true
+  },
+  {
+    "text": "Use (steroids).",
+    "expression": "(steroids)",
+    "casefold": true,
+    "span": [
+      4,
+      14
+    ],
+    "word": false
+  },
+  {
+    "text": "Use (steroids).",
+    "expression": "(steroids).",
+    "casefold": true,
+    "span": [
+      4,
+      15
+    ],
+    "word": false
+  }
+]

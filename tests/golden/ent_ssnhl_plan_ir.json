@@ -1,0 +1,109 @@
+[
+  {
+    "rule_id": "ng-mdr_0_replace_e0a41576-7030c859fc",
+    "name": "replace:sensorineural hearing loss",
+    "target_kind": "match_span",
+    "candidate_ops": [
+      "replace",
+      "replace"
+    ],
+    "candidate_kinds": [
+      "static",
+      "static"
+    ],
+    "candidate_ids": [
+      "rewrite_1",
+      "rewrite_2"
+    ],
+    "allow_noop": true,
+    "fire_mode": "once"
+  },
+  {
+    "rule_id": "ng-mdr_1_replace_7252b52e-3f26743f6d",
+    "name": "replace:suggests",
+    "target_kind": "match_span",
+    "candidate_ops": [
+      "replace",
+      "replace",
+      "replace"
+    ],
+    "candidate_kinds": [
+      "static",
+      "static",
+      "static"
+    ],
+    "candidate_ids": [
+      "rewrite_1",
+      "rewrite_2",
+      "rewrite_3"
+    ],
+    "allow_noop": true,
+    "fire_mode": "once"
+  },
+  {
+    "rule_id": "ng-mdr_2_after_f45cc5ba-9276d392b4",
+    "name": "after:SSNHL",
+    "target_kind": "after_anchor_to_scope_end",
+    "candidate_ops": [
+      "replace",
+      "replace",
+      "replace"
+    ],
+    "candidate_kinds": [
+      "static",
+      "static",
+      "static"
+    ],
+    "candidate_ids": [
+      "insert_1",
+      "insert_2",
+      "insert_3"
+    ],
+    "allow_noop": true,
+    "fire_mode": "once"
+  },
+  {
+    "rule_id": "ng-mdr_3_avoid_fd9869dc-01867183e2",
+    "name": "avoid:,",
+    "target_kind": "clause_containing_anchor_to_scope_end",
+    "candidate_ops": [
+      "replace",
+      "replace",
+      "replace"
+    ],
+    "candidate_kinds": [
+      "fallback",
+      "fallback",
+      "fallback"
+    ],
+    "candidate_ids": [
+      "fallback_1",
+      "fallback_2",
+      "fallback_3"
+    ],
+    "allow_noop": true,
+    "fire_mode": "repeat"
+  },
+  {
+    "rule_id": "ng-mdr_4_avoid_a6b6b471-3a1a918b92",
+    "name": "avoid:.",
+    "target_kind": "scope_entire",
+    "candidate_ops": [
+      "replace",
+      "replace",
+      "replace"
+    ],
+    "candidate_kinds": [
+      "fallback",
+      "fallback",
+      "fallback"
+    ],
+    "candidate_ids": [
+      "fallback_1",
+      "fallback_2",
+      "fallback_3"
+    ],
+    "allow_noop": true,
+    "fire_mode": "repeat"
+  }
+]

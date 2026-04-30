@@ -1,0 +1,257 @@
+[
+  {
+    "kind": "replace",
+    "v": {
+      "fire": "once",
+      "kind": "replace",
+      "note": null,
+      "options": {
+        "kind": "options",
+        "v": {
+          "connector_early": null,
+          "extras": [],
+          "max_attempts": null,
+          "max_sentences": null,
+          "min_prob_ratio_to_best": null,
+          "postfix_late": null,
+          "skip": null
+        }
+      },
+      "prefix": {
+        "kind": "set_match",
+        "v": {
+          "all_of": [],
+          "any_of": [
+            "abrupt",
+            "acute",
+            "noticed 24 hours",
+            "noticed 48 hours",
+            "noticed 72 hours",
+            "rapid onset",
+            "sudden",
+            "within 72 hours"
+          ],
+          "none_of": []
+        }
+      },
+      "scope": {
+        "kind": "chars",
+        "v": {
+          "casefold": true,
+          "kind": "chars",
+          "window_chars": 800
+        }
+      },
+      "target": "sensorineural hearing loss",
+      "with_phrases": [
+        "sudden sensorineural hearing loss",
+        "SSNHL"
+      ]
+    }
+  },
+  {
+    "kind": "replace",
+    "v": {
+      "fire": "once",
+      "kind": "replace",
+      "note": null,
+      "options": {
+        "kind": "options",
+        "v": {
+          "connector_early": null,
+          "extras": [],
+          "max_attempts": null,
+          "max_sentences": null,
+          "min_prob_ratio_to_best": null,
+          "postfix_late": null,
+          "skip": null
+        }
+      },
+      "prefix": {
+        "kind": "set_match",
+        "v": {
+          "all_of": [],
+          "any_of": [],
+          "none_of": []
+        }
+      },
+      "scope": null,
+      "target": "suggests",
+      "with_phrases": [
+        "shows",
+        "demonstrates",
+        "is consistent with"
+      ]
+    }
+  },
+  {
+    "kind": "after",
+    "v": {
+      "add_phrases": [
+        "This condition requires urgent treatment.",
+        "Prompt treatment is indicated.",
+        "Treatment should be initiated without delay."
+      ],
+      "fire": "once",
+      "kind": "after",
+      "note": null,
+      "options": {
+        "kind": "options",
+        "v": {
+          "connector_early": null,
+          "extras": [],
+          "max_attempts": null,
+          "max_sentences": null,
+          "min_prob_ratio_to_best": null,
+          "postfix_late": null,
+          "skip": null
+        }
+      },
+      "scope": null,
+      "target": "(SSNHL)"
+    }
+  },
+  {
+    "kind": "avoid",
+    "v": {
+      "connector": [
+        "this suggests",
+        "it suggests",
+        "this indicates",
+        "it indicates",
+        "it is suggestive",
+        "suggestive of",
+        "most likely"
+      ],
+      "fallback": [
+        "these tuning fork findings do not fit a simple pattern.",
+        "these findings require further evaluation.",
+        "the pattern is unclear and warrants urgent specialist assessment."
+      ],
+      "fire": "repeat",
+      "kind": "avoid",
+      "note": null,
+      "options": {
+        "kind": "options",
+        "v": {
+          "connector_early": null,
+          "extras": [
+            [
+              "min prob ratio to best",
+              "0.05"
+            ]
+          ],
+          "max_attempts": 5,
+          "max_sentences": null,
+          "min_prob_ratio_to_best": null,
+          "postfix_late": null,
+          "skip": 80
+        }
+      },
+      "postfix": {
+        "kind": "set_match",
+        "v": {
+          "all_of": [],
+          "any_of": [
+            "conductive"
+          ],
+          "none_of": []
+        }
+      },
+      "prefix": {
+        "kind": "set_match",
+        "v": {
+          "all_of": [
+            "left",
+            "positive",
+            "right",
+            "rinne",
+            "weber"
+          ],
+          "any_of": [],
+          "none_of": []
+        }
+      },
+      "rewrite": "postfix",
+      "scope": null,
+      "target": ","
+    }
+  },
+  {
+    "kind": "avoid",
+    "v": {
+      "connector": [
+        "consistent with",
+        "suggests",
+        "indicates",
+        "typical for"
+      ],
+      "fallback": [
+        "The exam findings show",
+        "The test results demonstrate",
+        "Weber and Rinne findings indicate"
+      ],
+      "fire": "repeat",
+      "kind": "avoid",
+      "note": null,
+      "options": {
+        "kind": "options",
+        "v": {
+          "connector_early": 0.6,
+          "extras": [
+            [
+              "min prob ratio to best",
+              "0.05"
+            ]
+          ],
+          "max_attempts": 10,
+          "max_sentences": 10,
+          "min_prob_ratio_to_best": null,
+          "postfix_late": 0.2,
+          "skip": null
+        }
+      },
+      "postfix": {
+        "kind": "set_match",
+        "v": {
+          "all_of": [],
+          "any_of": [
+            "air conduction",
+            "audiogram",
+            "bone conduction",
+            "lateralizes",
+            "negative",
+            "otoscopic",
+            "positive",
+            "rinne",
+            "tympanic membrane",
+            "tympanometry",
+            "weber"
+          ],
+          "none_of": []
+        }
+      },
+      "prefix": {
+        "kind": "set_match",
+        "v": {
+          "all_of": [],
+          "any_of": [],
+          "none_of": [
+            "administer",
+            "admit",
+            "discharge",
+            "initiate",
+            "order",
+            "prescribe",
+            "refer",
+            "start",
+            "treat"
+          ]
+        }
+      },
+      "rewrite": "everything",
+      "scope": null,
+      "target": "."
+    }
+  }
+]

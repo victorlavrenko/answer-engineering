@@ -1,0 +1,97 @@
+# Answer Engineering Rules
+## ORL: SSNHL
+---
+
+## Replace (once): sensorineural hearing loss
+With:
+- sudden sensorineural hearing loss
+- SSNHL
+Prefix (any):
+- sudden
+- abrupt
+- acute
+- rapid onset
+- within 72 hours
+- noticed 72 hours
+- noticed 48 hours
+- noticed 24 hours
+Scope:
+- 800 chars
+- casefold
+
+## Replace (once): suggests
+With:
+- shows
+- demonstrates
+- is consistent with
+
+## After: SSNHL
+Add:
+- This condition requires urgent treatment.
+- Prompt treatment is indicated.
+- Treatment should be initiated without delay.
+
+## Avoid (repeat, postfix): ,
+Prefix (all):
+- weber
+- rinne
+- left
+- right
+- positive
+Postfix (any):
+- conductive
+Connector:
+- this suggests
+- it suggests
+- this indicates
+- it indicates
+- it is suggestive
+- suggestive of
+- most likely
+Options:
+- trajectories: 5
+- min_prob_ratio_to_best: 0.05
+- skip: 80
+Fallback:
+- these tuning fork findings do not fit a simple pattern.
+- these findings require further evaluation.
+- the pattern is unclear and warrants urgent specialist assessment.
+
+## Avoid (repeat, everything): .
+Connector:
+- consistent with
+- suggests
+- indicates
+- typical for
+Postfix (any):
+- weber
+- rinne
+- lateralizes
+- air conduction
+- bone conduction
+- positive
+- negative
+- otoscopic
+- tympanic membrane
+- tympanometry
+- audiogram
+Prefix (none):
+- start
+- initiate
+- treat
+- administer
+- prescribe
+- order
+- admit
+- discharge
+- refer
+Options:
+- trajectories: 10
+- min_prob_ratio_to_best: 0.05
+- connector_early: 0.60
+- postfix_late: 0.20
+- max_sentences: 10
+Fallback:
+- The exam findings show
+- The test results demonstrate
+- Weber and Rinne findings indicate

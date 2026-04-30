@@ -1,0 +1,23 @@
+start: item*
+
+item: block
+    | COMMENT_LINE _NL*       -> comment
+    | DELIM _NL*              -> separator
+    | _NL                     -> blank
+    | OTHER_LINE _NL*         -> ignored
+
+block: heading _NL* section*
+heading: HEADING _NL*
+section: SECTION_HEADER _NL* bullets?
+bullets: (BULLET _NL*)+
+
+HEADING: /##[^\n]*/
+SECTION_HEADER: /(?i:(?!##)(?:scope|with|add|prompt|prefix|postfix|connector|fallback|options|rewrite)(?:\s*\([^)]*\))?):[^\n]*/
+BULLET: /[-*][ \t]+[^\n]+/
+COMMENT_LINE: /\/\/[^\n]*/
+DELIM.2: /---/
+OTHER_LINE: /[^\n]+/
+
+%import common.NEWLINE -> _NL
+%import common.WS_INLINE
+%ignore WS_INLINE

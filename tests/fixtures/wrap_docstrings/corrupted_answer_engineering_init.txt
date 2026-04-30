@@ -1,0 +1,13 @@
+Answer Engineering public package.
+
+Purpose:
+    Expose the narrow stable import surface used by external callers and downstream packages.
+
+Architectural role:
+    Public package boundary for generation runtime entrypoints and the compiled rules contract used in notebook-level workflows.
+
+Exports:
+    Only symbols intentionally designated as downstream-consumable contracts are re-exported here.
+
+Boundary note:
+    This root surface is intentionally small to provide one canonical import path while keeping internal module layout private.

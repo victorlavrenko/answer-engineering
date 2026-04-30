@@ -1,0 +1,96 @@
+[build-system]
+requires = ["hatchling>=1.20"]
+build-backend = "hatchling.build"
+
+[project]
+name = "answer-engineering"
+version = "0.1.0"
+description = "Rule-guided trajectory editing for protocol-constrained LLM generation."
+readme = "README.md"
+requires-python = ">=3.12"
+license = { file = "LICENSE" }
+authors = [{ name = "Victor Lavrenko" }]
+dependencies = [
+  "torch",
+  "transformers>=4.40",
+  "accelerate>=0.27",
+  "datasets>=2.19",
+  "tqdm>=4.66",
+  "lark>=1.1",
+  "huggingface_hub>=0.23",
+]
+
+[project.optional-dependencies]
+dev = [
+  "build",
+  "coverage",
+  "pip-audit",
+  "PyYAML",
+  "pyright==1.1.408",
+  "pytest",
+  "pytest-cov",
+  "ruff",
+  "vulture>=2.14",
+  "pylint",
+]
+
+hf = [
+  "huggingface_hub[hf_xet]",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/answer_engineering", "src/ae_paper_reproduction"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 80
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "ARG", "D"]
+ignore = [
+    "D203",  # prefer D211
+    "D213",  # prefer D212
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["B905", "D"]
+"tools/**" = ["UP040"]
+
+[tool.pyright]
+include = ["src", "tests", "scripts"]
+exclude = ["dist", ".venv", "**/node_modules", "**/__pycache__", "**/.*"]
+pythonVersion = "3.12"
+typeCheckingMode = "strict"
+stubPath = "stubs"
+extraPaths = ["src"]
+venvPath = "."
+venv = ".venv"
+
+reportMissingTypeStubs = "none"
+reportMissingModuleSource = "none"
+reportUnsupportedDunderAll = "none"
+
+reportUnusedFunction = "error"
+reportUnusedClass = "error"
+reportUnusedImport = "error"
+reportUnusedVariable = "error"
+
+executionEnvironments = [
+  { root = "src", extraPaths = ["src", "."] },
+  { root = "tests", extraPaths = ["src", "."] },
+  { root = "scripts", extraPaths = ["src", "."] },
+]
+
+[tool.pytest.ini_options]
+addopts = "-q"
+testpaths = ["tests"]
+
+[tool.vulture]
+paths = ["src/answer_engineering"]
+exclude = ["tests/", ".venv/", "dist/"]
+sort_by_size = true
+min_confidence = 80

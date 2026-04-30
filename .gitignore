@@ -1,0 +1,20 @@
+.venv/
+__pycache__/
+*.pyc
+dist/
+build/
+*.egg-info/
+.pytest_cache/
+.coverage
+coverage/
+_version.py
+*.out
+
+# LaTeX
+docs/paper/**
+!docs/paper/generated/
+!docs/paper/generated/*.tex
+!docs/paper/*.tex
+!docs/paper/*.bib
+!docs/paper/*.pdf
+!docs/paper/chktexrc

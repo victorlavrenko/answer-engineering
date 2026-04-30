@@ -1,0 +1,27 @@
+"""Inference package.
+
+Purpose:
+    Organize generation-runtime modules (contracts, runtime loop integration,
+    prompting, probing, and stream/session orchestration).
+
+Architectural role:
+    Internal implementation boundary for inference orchestration. The package
+    marker exists for structure, not for convenience re-exports.
+
+Owns:
+    - request/result/runtime contracts and runtime adapters
+    - decode/session orchestration and stream-session interfaces
+    - probing and prompting support used by runtime generation
+
+Does not own:
+    - rule-language parsing/compilation
+    - engine proposal/scoring/selection policy internals
+
+Import policy:
+    Import directly from concrete owning modules in this package.
+
+Boundary note:
+    This package exists to organize implementation modules and reduce transitive
+    imports during module initialization.
+
+"""

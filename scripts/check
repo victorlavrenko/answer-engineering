@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+if [[ -n "${VIRTUAL_ENV:-}" && -x "${VIRTUAL_ENV}/Scripts/python.exe" ]]; then
+  PYTHON="${VIRTUAL_ENV}/Scripts/python.exe"
+elif [[ -n "${VIRTUAL_ENV:-}" && -x "${VIRTUAL_ENV}/bin/python" ]]; then
+  PYTHON="${VIRTUAL_ENV}/bin/python"
+elif [[ -x ".venv/Scripts/python.exe" ]]; then
+  PYTHON="$(pwd)/.venv/Scripts/python.exe"
+elif [[ -x ".venv/bin/python" ]]; then
+  PYTHON="$(pwd)/.venv/bin/python"
+elif command -v python >/dev/null 2>&1; then
+  PYTHON="$(command -v python)"
+elif command -v python3 >/dev/null 2>&1; then
+  PYTHON="$(command -v python3)"
+else
+  echo "ERROR: could not find Python interpreter"
+  exit 1
+fi
+
+echo "VIRTUAL_ENV=${VIRTUAL_ENV:-<unset>}"
+echo "Using Python: ${PYTHON}"
+
+set -x
+
+"${PYTHON}" -m ruff format --check .
+"${PYTHON}" -m ruff check .
+"${PYTHON}" -m pyright
+"${PYTHON}" -m pylint --rcfile conventions/pylintrc src
+"${PYTHON}" -m pytest
+"${PYTHON}" -m build

@@ -1,0 +1,44 @@
+Public reproduction API surface for notebook and scripting workflows.
+
+Purpose:
+    Expose a stable, minimal set of types used to construct, execute, and
+    summarize reproducible evaluation runs from notebooks or scripts. This
+    module serves as the canonical import location for reproduction workflows
+    and hides the internal package layout of the reproduction subsystem.
+
+Owns:
+    - The public export surface for reproduction workflows
+    - The stable set of types expected by notebooks and user scripts
+    - The compatibility boundary between user code and internal reproduction
+      implementation modules
+
+Does not own:
+    - Dataset loading or caching behavior (implemented in repro_api)
+    - Evaluation execution or orchestration logic (implemented in runner)
+    - Evaluation result computation or report construction (implemented in
+      core.evaluation)
+    - Runtime telemetry or experiment scheduling concerns
+
+Key relationships:
+    - Re-exports dataset abstractions from ``answer_engineering.repro_api``
+    - Re-exports evaluation result structures from
+      ``ae_paper_reproduction.core.evaluation``
+    - Re-exports progress and reporting utilities from
+      ``ae_paper_reproduction.runner``
+    - Imported directly by notebooks and reproducibility scripts
+
+Current architecture notes:
+    This module is intentionally a façade-only surface.  It does not define
+    behavior and should remain free of orchestration or domain logic. All
+    exported names are explicitly enumerated via ``__all__`` to ensure a
+    deterministic and inspectable public API.
+
+Invariants:
+    - Only stable, user-facing reproduction types are exported here
+    - All exports are explicitly listed in ``__all__``
+    - No runtime orchestration or evaluation logic is implemented in this module
+
+TODO:
+    Keep this module small and stable as the reproduction subsystem evolves. If
+    new user-facing workflow primitives are introduced, export them here only
+    after their ownership boundary is clearly established.

@@ -1,0 +1,165 @@
+[
+  {
+    "candidates": [
+      "sudden sensorineural hearing loss",
+      "SSNHL"
+    ],
+    "fire": "once",
+    "gate": {
+      "all_of": [],
+      "any_of": [
+        "sudden",
+        "abrupt",
+        "acute",
+        "rapid onset",
+        "within 72 hours",
+        "noticed 72 hours",
+        "noticed 48 hours",
+        "noticed 24 hours"
+      ],
+      "none_of": []
+    },
+    "kind": "replace",
+    "rule_id": "mdr_0_replace_e0a41576",
+    "scope": {
+      "casefold": true,
+      "kind": "tail_chars",
+      "n": 800
+    },
+    "target": "sensorineural hearing loss"
+  },
+  {
+    "candidates": [
+      "shows",
+      "demonstrates",
+      "is consistent with"
+    ],
+    "fire": "once",
+    "gate": {
+      "all_of": [],
+      "any_of": [],
+      "none_of": []
+    },
+    "kind": "replace",
+    "rule_id": "mdr_1_replace_7252b52e",
+    "scope": {
+      "casefold": true,
+      "kind": "whole_doc",
+      "n": 0
+    },
+    "target": "suggests"
+  },
+  {
+    "candidates": [
+      "This condition requires urgent treatment.",
+      "Prompt treatment is indicated.",
+      "Treatment should be initiated without delay."
+    ],
+    "fire": "once",
+    "gate": {
+      "all_of": [],
+      "any_of": [],
+      "none_of": []
+    },
+    "kind": "after",
+    "rule_id": "mdr_2_after_f45cc5ba",
+    "scope": {
+      "casefold": true,
+      "kind": "whole_doc",
+      "n": 0
+    },
+    "target": "SSNHL"
+  },
+  {
+    "connector_terms": [
+      "this suggests",
+      "it suggests",
+      "this indicates",
+      "it indicates",
+      "it is suggestive",
+      "suggestive of",
+      "most likely"
+    ],
+    "edit": {
+      "kind": "postfix",
+      "n_clauses": null,
+      "n_sentences": null
+    },
+    "fallback": [
+      "these tuning fork findings do not fit a simple pattern.",
+      "these findings require further evaluation.",
+      "the pattern is unclear and warrants urgent specialist assessment."
+    ],
+    "fire": "repeat",
+    "kind": "avoid",
+    "options": {
+      "min_prob_ratio_to_best": 0.05,
+      "probe_num_beams": 5,
+      "skip": 80
+    },
+    "required_after_any": [
+      "conductive"
+    ],
+    "required_before_all": [
+      "weber",
+      "rinne",
+      "left",
+      "right",
+      "positive"
+    ],
+    "required_before_any": [],
+    "rule_id": "mdr_3_avoid_fd9869dc",
+    "scope": {
+      "casefold": true,
+      "kind": "whole_doc",
+      "n": 0
+    },
+    "target": ","
+  },
+  {
+    "connector_terms": [
+      "consistent with",
+      "suggests",
+      "indicates",
+      "typical for"
+    ],
+    "edit": {
+      "kind": "everything",
+      "n_clauses": null,
+      "n_sentences": null
+    },
+    "fallback": [
+      "The exam findings show",
+      "The test results demonstrate",
+      "Weber and Rinne findings indicate"
+    ],
+    "fire": "repeat",
+    "kind": "avoid",
+    "options": {
+      "min_prob_ratio_to_best": 0.05,
+      "probe_num_beams": 10
+    },
+    "required_after_any": [
+      "weber",
+      "rinne",
+      "lateralizes",
+      "air conduction",
+      "bone conduction",
+      "positive",
+      "negative",
+      "otoscopic",
+      "tympanic membrane",
+      "tympanometry",
+      "audiogram"
+    ],
+    "required_before_all": [],
+    "required_before_any": [],
+    "rule_id": "mdr_4_avoid_a6b6b471",
+    "scope": {
+      "casefold": true,
+      "kind": "whole_doc",
+      "n": 0
+    },
+    "target": "."
+  }
+]
