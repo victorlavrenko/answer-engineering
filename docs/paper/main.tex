@@ -1905,17 +1905,55 @@ substantial positive shift (\ConductiveTrajectoryDeltaPP{}), with improvements
 (\ConductiveTrajectoryImprovedPP{}) exceeding degradations
 (\ConductiveTrajectoryDegradedPP{}).
 
-This pattern indicates that the intervention mechanism is performing genuine
-trajectory modification rather than merely enforcing target-specific labels.
-Local trajectory interventions appear to improve not only protocol compliance on
-the SSNHL task but also the stability and clinical alignment of reasoning in
-cases governed by a different diagnostic pathway.
+We treat the degraded rows in
+Table~\ref{tab:paired-trajectory-changes} as collateral intervention cases:
+outputs that were correct under the comparison run but became incorrect after
+intervention. Manual review of the
+\SSNHLTrajectoryDegradedCount{} degraded SSNHL trajectory-editing cases found
+that these failures were not cleanly attributable to a single rule. In the
+reviewed cases, the reasoning baseline often reached or strongly implied a
+diagnosis before explicitly analyzing Weber and Rinne findings, and several
+responses mentioned these findings primarily as post-diagnosis rationalization
+rather than as premises from which the diagnosis was derived.
+
+This review suggests that even under reasoning-oriented prompting, the
+evaluated model did not always maintain strong step-wise reasoning fidelity. In
+some reviewed cases, reasoning-form outputs remained compressed or
+answer-first despite explicit step-by-step instructions. Trajectory editing
+therefore often operated by repairing already premature reasoning rather than
+refining fully step-wise analysis.
+
+The reviewed collateral cases fell into three recurring categories:
+
+\begin{enumerate}[leftmargin=*,nosep]
+\item \textbf{Management-endpoint failures.}
+Trajectory editing sometimes repaired reasoning order while the final
+management remained referral-first rather than explicitly recommending steroid
+treatment.
+
+\item \textbf{Diagnostic reinterpretation instability.}
+Repair sometimes destabilized interpretation of tuning-fork findings,
+producing conductive, otitis-media, or vascular explanations despite
+SSNHL-consistent findings.
+
+\item \textbf{Intermediate-reasoning instability.}
+Repeated local correction sometimes produced valid-looking intermediate
+reasoning without preserving the benchmark-critical management endpoint.
+\end{enumerate}
+
+These observations help contextualize the degraded cases reported in
+Table~\ref{tab:paired-trajectory-changes}. The presence of collateral failures
+does not imply that intervention merely forces target labels or that failures
+are cleanly reducible to individual rules. Instead, the intervention mechanism
+appears to perform genuine trajectory modification, sometimes stabilizing
+reasoning and sometimes interacting with already unstable or answer-first
+trajectories. Consistent with this interpretation, local trajectory
+interventions improve not only protocol compliance on the SSNHL task but also
+clinical alignment in cases governed by a different diagnostic pathway.
 
 At the same time, the result highlights an important interpretive limitation:
 the current evaluation does not fully disentangle gains arising from
-task-specific protocol repair versus gains arising from more general trajectory
-stabilization. Clarifying that distinction, and improving trigger specificity
-where unnecessary edits remain, is an important direction for future work.
+task-specific protocol repair versus broader trajectory stabilization.
 
 \subsection{Model Sensitivity and Baseline
 Pathologies}\label{sec:model_sensitivity}
@@ -2022,11 +2060,16 @@ about natural clinical prevalence, distributional diversity, and real-world case
 heterogeneity.
 
 Trajectory editing improves decision outcomes but does not guarantee uniform
-improvements in reasoning stability. In models with unstable or poorly
-calibrated reasoning dynamics, repeated local corrections may increase
-generation length, latency, or verbosity. The method therefore assumes the
-existence of locally recoverable reasoning trajectories that can be
-incrementally repaired during decoding.
+improvements in reasoning stability or output quality. Intervention may cause
+collateral degradation when an otherwise-correct answer is redirected into a
+less useful trajectory. In models with unstable or poorly calibrated reasoning
+dynamics, repeated local corrections may increase generation length, latency,
+verbosity, or internal inconsistency. Manual review of degraded SSNHL
+trajectory-editing cases further suggests that some failures arise when the
+baseline has already committed to a diagnosis before performing the required
+step-wise analysis, rather than refine a fully step-wise one. The method
+therefore assumes the existence of locally recoverable reasoning trajectories
+that can be incrementally repaired during decoding.
 
 System behavior depends on reliable detection of protocol-relevant triggers.
 False positives may introduce unnecessary edits, while false negatives may allow
@@ -2141,7 +2184,10 @@ This direction should be evaluated using intervention density, number of
 repeated violations after repair, trajectory coherence measures, final protocol
 adherence, and preservation of valid downstream reasoning. Controlled ablations
 should compare local frontier repair against upstream causal-span repair under
-identical rule sets.
+identical rule sets. Future work should also disentangle gains arising from
+protocol-specific repair versus broader trajectory stabilization. Evaluation
+should further examine how trigger specificity affects unnecessary edits and
+collateral intervention behavior.
 
 \subsection{Branch-aware trajectory control and uncertainty representation}
 
