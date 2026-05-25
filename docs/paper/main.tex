@@ -203,6 +203,12 @@ deterministic runtime and authoring layer for localized trajectory intervention
 during generation, preserving the underlying model and decoding process while
 enabling protocol-guided control.
 
+The approach is positioned relative to prior work along three complementary
+dimensions: failure coverage, intervention surface, and trajectory-time
+capability. Unlike prompting, constrained decoding, or workflow-level
+guardrails, Answer Engineering targets localized intervention within the
+generated reasoning trajectory itself.
+
 Evidence from clinical decision-making—one of the most extensively studied
 protocol-governed domains—illustrates the magnitude of this challenge. In a
 benchmark evaluating guideline adherence across 17 large language models and 20
@@ -634,15 +640,84 @@ in how they influence the generation process.
 
 \end{table*}
 
-\subsection{Relation to Contemporary Runtime Control Frameworks}
 
-Recent inference and orchestration frameworks provide increasingly rich
-mechanisms for controlling language-model behavior at runtime. These systems
-expose structured decoding constraints, workflow policies, and programmable
-guardrails that significantly improve reliability in production deployments.
-Answer Engineering operates within this same design space, but targets a
-different control surface: localized semantic repair of reasoning trajectories
-during generation.
+\begin{table*}[t]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{2.8pt}
+\renewcommand{\arraystretch}{1.24}
+\caption{Control surfaces for protocol-constrained generation. Methods differ in
+intervention timing, control surface, authoring model, and the guarantees they
+provide.}\label{tab:control-surfaces}
+\begin{tabularx}{\textwidth}{
+>{\raggedright\arraybackslash}p{0.15\textwidth}
+>{\raggedright\arraybackslash}p{0.19\textwidth}
+>{\raggedright\arraybackslash}p{0.11\textwidth}
+>{\raggedright\arraybackslash}p{0.15\textwidth}
+>{\raggedright\arraybackslash}p{0.10\textwidth}
+>{\raggedright\arraybackslash}p{0.13\textwidth}
+>{\raggedright\arraybackslash}X}
+\toprule
+Control surface &
+Representative systems &
+Intervention timing &
+Modified object &
+Repairs generated text &
+Authoring model &
+Primary guarantee \\
+\midrule
+Prompt / reasoning scaffolds &
+CoT, ReAct, Tree-of-Thoughts &
+before generation &
+prompt or scaffold &
+No &
+prompts / examples &
+reasoning guidance \\
+\addlinespace
+Structured / constrained decoding &
+Guidance, LMQL, Outlines, grammar/schema decoding, SGLang &
+during decoding &
+token admissibility or decode program &
+No &
+grammar / schema / program &
+structural validity \\
+\addlinespace
+Post-hoc validation / correction &
+Self-Refine, Reflexion, validation pipelines &
+after generation &
+completed output &
+Yes (post-hoc) &
+validators / retry workflows &
+output filtering or correction \\
+\addlinespace
+Runtime guardrails / orchestration &
+NeMo Guardrails, workflow policies &
+runtime / workflow boundary &
+interaction policy &
+limited &
+policy / workflow rules &
+workflow safety \\
+\addlinespace
+Trajectory intervention (this work) &
+Answer Engineering &
+during generation &
+generated reasoning trajectory &
+Yes (local) &
+local protocol rules &
+local protocol compliance \\
+\bottomrule
+\end{tabularx}
+\end{table*}
+
+\subsection{Relation to Existing Control Surfaces}
+
+Recent runtime frameworks expose multiple control surfaces for influencing
+language-model behavior, including prompt scaffolds, structured decoding
+constraints, post-hoc validation, and workflow-level guardrails.
+Table~\ref{tab:control-surfaces} summarizes these intervention surfaces and
+situates Answer Engineering within this broader runtime-control landscape.
+Unlike prompt- or workflow-level methods, Answer Engineering targets localized
+intervention within the evolving reasoning trajectory during generation.
 
 \paragraph{Structured-output and guided-decoding systems.}
 Modern inference engines such as vLLM and SGLang support structured-output
@@ -650,19 +725,16 @@ generation using grammars, JSON schemas, regular expressions, and other
 admissibility constraints \parencite{kwon2023vllm,zheng2024sglang}. These
 mechanisms ensure that generated text satisfies formal structural requirements
 and are widely used in production systems for enforcing output validity.
-Libraries such as Guidance, LMQL, and related constrained-decoding toolkits
-provide programmable interfaces for structured generation that allow developers
-to define grammar-based or schema-based constraints on the generation process
-\parencite{guidance2023,beurer2023lmql}.
+Libraries such as Guidance, LMQL, Outlines, and related
+constrained-decoding toolkits provide programmable interfaces for structured
+generation that allow developers to define grammar-based, schema-based, or
+programmatic constraints on the generation process
+\parencite{guidance2023,beurer2023lmql,koo2024automata}.
 
-These approaches are highly effective when correctness can be expressed as
-admissibility of token sequences or output structure. However, structural
-constraints do not directly address semantic validity of intermediate reasoning
-steps. In protocol-constrained settings, many failures arise from locally
-inconsistent inferences rather than invalid syntax or formatting. Answer
-Engineering therefore operates at a different level of control: it modifies the
-evolving reasoning trajectory itself when protocol violations are detected,
-rather than restricting the set of admissible tokens.
+These systems are highly effective when correctness can be expressed as
+structural admissibility of token sequences or outputs. In contrast, Answer
+Engineering targets semantic violations arising within otherwise structurally
+valid reasoning trajectories.
 
 \paragraph{Programmable guardrail and orchestration systems.}
 Frameworks such as NeMo Guardrails provide configurable policies governing model
@@ -673,22 +745,16 @@ application policies. Such guardrail mechanisms are widely used to improve
 system reliability and enforce domain-specific constraints in deployed
 applications.
 
-Answer Engineering differs in that it performs direct trajectory modification
-during decoding rather than enforcing policies only at workflow boundaries.
-Instead of filtering or rejecting completed outputs, the runtime intervenes
-locally within the reasoning sequence and resumes generation from the corrected
-prefix. This intervention model targets protocol violations at the point where
-they occur, enabling localized repair without discarding the remainder of the
-trajectory.
+Guardrail systems typically intervene at workflow boundaries by filtering,
+redirecting, or blocking interactions. Answer Engineering instead modifies the
+reasoning trajectory itself and resumes generation from the corrected prefix.
 
 \paragraph{Positioning within the runtime control landscape.}
-These approaches are complementary rather than mutually exclusive.
-Structured-output and guided-decoding systems ensure formal validity of
-generated text, guardrail frameworks enforce workflow-level policies, and
-trajectory editing provides localized semantic correction of reasoning steps
-during generation. In practical deployments, trajectory-level intervention can
-be layered on top of structured decoding or guardrail mechanisms as an
-additional reliability layer.
+These methods intervene at different stages of generation and therefore address
+different classes of constraints and failure modes. Structured-output and
+guided-decoding systems enforce formal admissibility, guardrail frameworks
+regulate workflow behavior, and trajectory intervention modifies the evolving
+reasoning process itself.
 
 
 Prompt-based methods such as chain-of-thought prompting influence generation by
@@ -725,12 +791,17 @@ These systems can guarantee the presence of mandatory protocol steps, but they
 can require substantial symbolic specification and maintenance effort as
 protocols evolve.
 
-These comparisons indicate that most existing approaches influence reasoning
-through probabilistic guidance, structural constraints, or post-hoc validation
-rather than direct semantic modification of the reasoning trajectory itself.
+These comparisons position existing methods along three distinct dimensions:
+failure coverage, intervention surface, and trajectory-time capability.
+Prompting and sampling influence reasoning indirectly, constrained decoding
+enforces structural admissibility, guardrail systems regulate workflow behavior,
+and Answer Engineering intervenes locally within the generated reasoning
+trajectory itself.
 
 These limitations motivate the approach summarized in
-Tables~\ref{tab:failure-mode-comparison} and \ref{tab:trajectory_operations}. In
+Tables~\ref{tab:failure-mode-comparison},
+\ref{tab:control-surfaces},
+and~\ref{tab:trajectory_operations}. In
 this work we develop \emph{Answer Engineering}, a decoding-time framework that
 enforces protocol constraints through local intervention in the evolving
 reasoning trajectory using declarative domain rules. The trajectory-control
@@ -1120,14 +1191,6 @@ explicit mention of urgent steroid treatment according to established guidelines
 \textcite{chandrasekhar2019ssnhl}. While this does not guarantee full
 faithfulness of chain-of-thought reasoning, it ensures that protocol-critical
 conclusions remain consistent with the stated reasoning.
-
-\subsection{Relation to Existing Control Methods}
-
-This section's comparison details are summarized in
-Table~\ref{tab:failure-mode-comparison}. In short, trajectory editing differs
-from constrained decoding, post-hoc verification, and full expert trees by
-intervening \emph{during decoding} with local trajectory edits scored by model
-likelihood.
 
 \section{Runtime Framework for Answer Engineering}
 
