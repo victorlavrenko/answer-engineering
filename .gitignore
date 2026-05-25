@@ -9,6 +9,7 @@ build/
 coverage/
 _version.py
 *.out
+tmp/*
 
 # LaTeX
 docs/paper/**
