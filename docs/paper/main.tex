@@ -1499,6 +1499,19 @@ of reasoning trajectories rather than as a surrogate for full-spectrum clinical
 performance or natural clinical prevalence, and the detailed template design
 rationale is provided in Appendix~\ref{app:clinical_endpoint}.
 
+The synthetic generator also functions as a controlled perturbation mechanism.
+Each template family is rendered under seeded label-preserving perturbations,
+including surface-wording variation, laterality-preserving paired substitutions,
+numeric variation in age and time since onset, evidence-order variation in
+symptom lists, and inclusion or removal of non-decisive distractor details.
+These perturbations preserve the benchmark label because the decisive
+Weber/Rinne pattern and class-aligned otoscopic findings remain fixed within
+each diagnostic branch. The present evaluation therefore tests intervention
+behavior across controlled surface and distractor variation, but does not
+separately report perturbation-sensitivity metrics by perturbation type.
+Ambiguity-introducing perturbations, where the clinical label is intentionally
+weakened or made uncertain, are left for future work.
+
 \subsection{Evaluation criterion}
 
 For benchmarking purposes, protocol adherence is operationalized as a binary
@@ -2187,6 +2200,10 @@ rather than statistically independent real-world patient cases. This design is
 useful for isolating a protocol-sensitive decision boundary, but it limits claims
 about natural clinical prevalence, distributional diversity, and real-world case
 heterogeneity.
+
+Although the generated cases include seeded label-preserving perturbations, the
+current results aggregate across these variants rather than reporting paired
+original-versus-perturbed sensitivity analyses.
 
 Trajectory editing improves decision outcomes but does not guarantee uniform
 improvements in reasoning stability or output quality. Intervention may cause
