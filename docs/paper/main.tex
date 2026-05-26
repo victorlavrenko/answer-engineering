@@ -1639,14 +1639,15 @@ localized intervention mechanisms applied to the generation process. The
 evaluated configurations range from prompt-level adjustments to trajectory-level
 coordination of validation and repair.
 
-Rules were developed using the training split of the publicly available
-dataset. A separate held-out test split was defined but was not used
-during rule development. The results reported in this paper correspond
-to the training split, which serves as a controlled benchmark for
-evaluating runtime intervention behavior.
+Rules were developed using the training split of the publicly available dataset.
+Performance during development was monitored on a separate validation split. A
+held-out test split was reserved for final evaluation and was not used for rule
+modification. All results reported in this paper, including
+Table~\ref{tab:ssnhl-results}, correspond to the held-out test split.
 
-The rule set was finalized prior to executing the reported evaluation,
-and no rule modifications were made during metric computation.
+The ruleset was finalized before test evaluation, and no rule modifications were
+made after examining test outputs except for post hoc failure analysis reported
+in the paper.
 
 \paragraph{Baseline LLM}
 
