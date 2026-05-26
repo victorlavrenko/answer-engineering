@@ -201,7 +201,8 @@ answer has been produced.
 This work does not propose a new decoding algorithm. Instead, it presents a
 deterministic runtime and authoring layer for localized trajectory intervention
 during generation, preserving the underlying model and decoding process while
-enabling protocol-guided control.
+enabling protocol-guided control. Appendix~\ref{app:taxonomy} summarizes the
+terminology and positioning used throughout the paper. 
 
 The approach is positioned relative to prior work along three complementary
 dimensions: failure coverage, intervention surface, and trajectory-time
@@ -322,7 +323,7 @@ implementation plan toward reuse of an existing library.\footnote{See the
 repository quickstart notebook \path{notebooks/quickstart.ipynb}.}
 
 This work therefore investigates whether localized trajectory intervention can
-provide the runtime control required for reliable protocol-compliant reasoning.
+provide a runtime control surface for improving protocol-compliant reasoning.
 
 To address these requirements, this paper makes three contributions:
 
@@ -526,8 +527,8 @@ literature:
 \end{itemize}
 
 These paradigms correspond to different control points in the generation
-pipeline and therefore differ in their ability to guarantee adherence to domain
-protocols.
+pipeline and therefore differ in how directly they can enforce explicitly
+specified protocol constraints.
 
 While Table~\ref{tab:failure-mode-comparison} summarizes empirical coverage of
 protocol-related failure modes, these approaches intervene at different stages
@@ -653,7 +654,7 @@ provide.}\label{tab:control-surfaces}
 >{\raggedright\arraybackslash}p{0.15\textwidth}
 >{\raggedright\arraybackslash}p{0.19\textwidth}
 >{\raggedright\arraybackslash}p{0.11\textwidth}
->{\raggedright\arraybackslash}p{0.15\textwidth}
+>{\raggedright\arraybackslash}p{0.12\textwidth}
 >{\raggedright\arraybackslash}p{0.10\textwidth}
 >{\raggedright\arraybackslash}p{0.13\textwidth}
 >{\raggedright\arraybackslash}X}
@@ -664,7 +665,7 @@ Intervention timing &
 Modified object &
 Repairs generated text &
 Authoring model &
-Primary guarantee \\
+Primary control property \\
 \midrule
 Prompt / reasoning scaffolds &
 CoT, ReAct, Tree-of-Thoughts &
@@ -698,13 +699,13 @@ limited &
 policy / workflow rules &
 workflow safety \\
 \addlinespace
-Trajectory intervention (this work) &
-Answer Engineering &
-during generation &
-generated reasoning trajectory &
-Yes (local) &
-local protocol rules &
-local protocol compliance \\
+\textbf{Trajectory intervention (this work)} &
+\textbf{Answer Engineering} &
+\textbf{during generation} &
+\textbf{generated reasoning trajectory} &
+\textbf{Yes (local)} &
+\textbf{local protocol rules} &
+\textbf{local protocol-constraint enforcement} \\
 \bottomrule
 \end{tabularx}
 \end{table*}
@@ -1159,12 +1160,12 @@ overall answer quality, but they often require multiple inference passes and may
 discard largely correct trajectories because of a single local mistake.
 
 Trajectory editing instead follows a \emph{local intervention} strategy:
-intervene at the violating span and preserve the rest of the trajectory. In this
-paper, trajectory editing refers to runtime modification of the generated token
-sequence to enforce protocol constraints before generation continues. The unit
-of control is a \emph{micro-constraint} on admissible local continuations
-(representative examples in Appendix~\ref{app:rule_examples}), which is well
-aligned with failure modes F4--F5.
+intervene at the violating span while retaining unaffected visible text where
+applicable. In this paper, trajectory editing refers to runtime modification of
+the generated token sequence to enforce protocol constraints before generation
+continues. The unit of control is a \emph{micro-constraint} on admissible local
+continuations (representative examples in Appendix~\ref{app:rule_examples}),
+which is well aligned with failure modes F4--F5.
 
 \subsection{Micro-Constraints Instead of Expert Decision Trees}
 \textbf{Addresses: F4, F5 (and partially F1)}
@@ -2660,6 +2661,117 @@ These interventions operate locally during generation. When a trigger pattern
 appears in the reasoning trajectory, the corresponding rule invalidates the
 unsafe continuation or inserts a protocol-compliant statement, allowing the
 language model to continue generating the explanation.
+
+\appsection{Trajectory-Control Taxonomy}{app:taxonomy}
+
+This appendix summarizes the terminology and positioning used throughout the
+paper and should be read as a taxonomy of current mechanisms and claims rather
+than a statement of future capabilities.
+
+A more detailed living taxonomy, including implementation-facing terminology,
+telemetry mappings, and reviewer-risk clarifications, is maintained in the
+project documentation at
+\href{https://github.com/victorlavrenko/answer-engineering/blob/main/docs/current/trajectory-taxonomy.md}
+{docs/current/trajectory-taxonomy.md}.
+
+The taxonomy is intended to clarify claims, define intervention mechanisms
+precisely, and distinguish Answer Engineering from nearby control surfaces.
+
+\paragraph{Core terminology.}
+
+\begin{table}[!htbp]
+\centering
+\small
+\begin{tabularx}{\linewidth}{
+>{\raggedright\arraybackslash}p{0.30\linewidth}
+X}
+\toprule
+Term & Meaning in this work \\
+\midrule
+
+Trajectory &
+The evolving visible reasoning or answer sequence generated during one decoding
+run. \\
+
+Trajectory control &
+Runtime intervention on the visible trajectory during generation. \\
+
+Trajectory editing &
+Concrete runtime modification of generated text, including replacement,
+rollback-based continuation selection, or insertion. \\
+
+Intervention &
+A rule-triggered runtime action that modifies or constrains the trajectory. \\
+
+Repair &
+A trajectory edit intended to improve protocol compliance or remove a local
+violation. \\
+
+Rollback probing &
+Local exploration of candidate continuations from an earlier trajectory prefix. \\
+
+Forced continuation / insertion &
+Insertion of required protocol statements once a triggering condition is
+detected. \\
+
+\bottomrule
+\end{tabularx}
+\caption{Terminology used for trajectory control and runtime intervention.}
+\label{tab:taxonomy_terms}
+\end{table}
+
+\paragraph{Relation to nearby control surfaces.}
+
+Answer Engineering is positioned alongside several established control
+mechanisms.
+
+\begin{itemize}[leftmargin=*]
+
+\item
+\textbf{Constrained decoding} restricts admissible tokens or output structures.
+Answer Engineering instead operates on the generated trajectory itself and may
+repair already generated content.
+
+\item
+\textbf{Guardrail systems} typically intervene at workflow boundaries through
+filtering, blocking, or routing. Answer Engineering intervenes within the
+reasoning trajectory during generation.
+
+\item
+\textbf{Validation systems} detect violations or inconsistencies but do not
+necessarily modify generation online. Answer Engineering combines detection with
+runtime intervention.
+
+\item
+\textbf{Expert systems} primarily rely on explicit symbolic rules and
+procedures. Answer Engineering instead applies localized protocol constraints
+while preserving model-generated reasoning.
+
+\end{itemize}
+
+\paragraph{Explicit non-claims.}
+
+This work does not claim:
+
+\begin{itemize}[leftmargin=*]
+
+\item retraining or modification of model parameters,
+
+\item hidden-state steering or activation editing,
+
+\item formal verification of reasoning correctness,
+
+\item complete constrained decoding,
+
+\item persistent branch-aware decoding,
+
+\item or general causal diagnosis of reasoning failures.
+
+\end{itemize}
+
+The narrower claim investigated in this paper is that localized,
+rule-triggered runtime intervention can improve protocol compliance during
+generation while preserving the underlying autoregressive model.
 
 \appsection{Reproducibility note and artifact map}{app:implementation}
 
