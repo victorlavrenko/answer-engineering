@@ -1282,7 +1282,14 @@ decoding continues.
 
 All reported experimental configurations use deterministic greedy decoding.
 Thus, repeated runs with the same model, dataset, rule set, and environment
-produce the same generated trajectories.
+produce identical generated trajectories and evaluation outcomes. As a result,
+the present evaluation does not involve run-to-run decoding variance, and
+interpretation primarily depends on effect magnitude and paired behavioral
+changes rather than stochastic generation variability. Formal confidence-
+interval estimation was considered but is not emphasized in the main
+presentation because the observed effects are substantially larger than
+plausible benchmark-level uncertainty and do not depend on fine-grained
+discrimination between near-overlapping results.
 
 Runtime is reported as the mean per-case wall-clock time measured over
 the full evaluation run, measured from the start of model
@@ -1923,7 +1930,11 @@ independent signal about trajectory behavior outside the target protocol.
     \bottomrule
   \end{tabular}
   \caption{Paired change summary across SSNHL and conductive runs, reported in
-  raw counts.}\label{tab:paired-trajectory-changes}
+raw counts. Improvements substantially exceed degradations across reported
+settings; the observed directional asymmetry would correspond to highly
+significant paired comparisons ($p < 0.001$), although formal paired
+significance testing is not emphasized in the present
+evaluation.}\label{tab:paired-trajectory-changes}
 \end{table*}
 
 Table~\ref{tab:paired-trajectory-changes} summarizes the paired changes induced
@@ -1933,6 +1944,15 @@ target protocol. In the conductive setting, trajectory editing also produces a
 substantial positive shift (\ConductiveTrajectoryDeltaPP{}), with improvements
 (\ConductiveTrajectoryImprovedPP{}) exceeding degradations
 (\ConductiveTrajectoryDegradedPP{}).
+
+Because Table~\ref{tab:paired-trajectory-changes} reports paired improved-
+versus-degraded outcomes directly, interpretation primarily depends on the
+direction and magnitude of paired changes rather than on marginal acceptance
+rates alone. Across the reported comparisons, improvements substantially
+exceed degradations, indicating a consistent directional effect of
+intervention. Formal paired significance testing and exact p-value reporting
+are therefore not emphasized here, since the observed asymmetry is already
+large and directionally unambiguous.
 
 We treat the degraded rows in
 Table~\ref{tab:paired-trajectory-changes} as collateral intervention cases:
@@ -2218,7 +2238,9 @@ heterogeneity.
 
 Although the generated cases include seeded label-preserving perturbations, the
 current results aggregate across these variants rather than reporting paired
-original-versus-perturbed sensitivity analyses.
+original-versus-perturbed sensitivity analyses. Future work involving smaller
+deltas, broader benchmark families, or stochastic decoding may require more
+extensive statistical treatment.
 
 Trajectory editing improves decision outcomes but does not guarantee uniform
 improvements in reasoning stability or output quality. Intervention may cause
@@ -2481,7 +2503,9 @@ Experiments were executed in Google Colab on a G4 GPU runtime. In this runtime,
 6000 Blackwell GPU with approximately 96\,GB VRAM.@\
 
 All reported runs were executed in this Colab environment using deterministic
-greedy decoding.
+greedy decoding. The evaluation protocol is therefore deterministic rather than
+sampling-based: fixed models, datasets, rulesets, and decoding configuration
+produce reproducible benchmark outcomes without run-to-run variance.
 
 Reproduction may require additional configuration, including setting
 authentication secrets (e.g., Hugging Face tokens), accepting access
@@ -2827,7 +2851,10 @@ The run emits machine-readable artifacts including
 records commit hash, model/config, ruleset hash, validation-slice definition,
 and run configuration. Reported generation uses deterministic greedy decoding,
 so the primary reproducibility mechanism is the fixed model, dataset, ruleset,
-and decoding configuration rather than stochastic sampling.
+and decoding configuration rather than stochastic sampling. Accordingly, the
+present evaluation emphasizes reproducible effect magnitude and paired
+trajectory behavior rather than repeated-sampling estimation of decoding
+uncertainty.
 
 \appsection{Representative prompt snippets}{app:prompt_snippets}
 
