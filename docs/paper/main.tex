@@ -1629,13 +1629,16 @@ protocol-consistent reasoning and management.
     \\
     \bottomrule
   \end{tabular}
-  \caption{ Performance on SSNHL ($N=\PaperEvalN{}$) and contrastive conductive
-    cases ($N=\PaperEvalN{}$). Slowdown is reported relative to the reasoning
-    run within the same diagnostic scope; values below $1\times$ indicate
-    acceleration. Balanced accuracy averages the SSNHL and conductive acceptance
-    rates when both scopes are available. Trajectory editing combines local
-    validation with Replace and After rules into a coordinated intervention
-    mechanism. }\label{tab:ssnhl-results}
+\caption{Intervention-policy ablation matrix for the implemented policy subset
+  on SSNHL ($N=\PaperEvalN{}$) and contrastive conductive cases
+  ($N=\PaperEvalN{}$). Slowdown is reported relative to the reasoning run within
+  the same diagnostic scope; values below $1\times$ indicate acceleration.
+  Balanced accuracy averages the SSNHL and conductive acceptance rates when both
+  scopes are available. The reported subset includes unguided generation,
+  reasoning, global validation, local validation, Replace/After-only editing,
+  and full trajectory editing. Trajectory editing combines local validation with
+  Replace and After rules into a coordinated intervention
+  mechanism.}\label{tab:ssnhl-results}
 \end{table*}
 
 Table~\ref{tab:ssnhl-results} summarizes performance across progressively more
@@ -1643,11 +1646,15 @@ localized intervention mechanisms applied to the generation process. The
 evaluated configurations range from prompt-level adjustments to trajectory-level
 coordination of validation and repair.
 
-Rules were developed using the training split of the publicly available dataset.
-Performance during development was monitored on a separate validation split. A
-held-out test split was reserved for final evaluation and was not used for rule
-modification. All results reported in this paper, including
-Table~\ref{tab:ssnhl-results}, correspond to the held-out test split.
+Table~\ref{tab:ssnhl-results} should be interpreted as the intervention-policy
+ablation matrix for the currently implemented policy set. It reports a
+documented subset of possible intervention policies: unguided generation,
+reasoning, global validation, local validation, Replace/After-only editing, and
+the full trajectory-editing stack. Branch-aware control and adaptive or
+confidence-triggered policies are discussed in Future Work
+(Sections~\ref{sec:future_branch_aware} and
+\ref{sec:future_adaptive_policies}) and are therefore not included in the
+present ablation matrix.
 
 The ruleset was finalized before test evaluation, and no rule modifications were
 made after examining test outputs except for post hoc failure analysis reported
@@ -2374,7 +2381,8 @@ should compare pure trajectory editing against hybrid systems combining
 trajectory repair with prompt adaptation or activation steering under identical
 protocols and models.
 
-\subsection{Branch-aware trajectory control and uncertainty representation}
+\subsection{Branch-aware trajectory control and uncertainty
+representation}\label{sec:future_branch_aware}
 
 \paragraph{Motivation.}
 The present system selects a single accepted trajectory after each intervention.
@@ -2398,7 +2406,8 @@ frequency with which branch-aware control changes the final decision. In
 high-stakes environments, success should be defined not only by accuracy but
 also by whether the system correctly signals unresolved ambiguity.
 
-\subsection{Adaptive intervention policies and rule lifecycle management}
+\subsection{Adaptive intervention policies and rule lifecycle
+management}\label{sec:future_adaptive_policies}
 
 \paragraph{Motivation.}
 Trajectory editing introduces computational overhead relative to unconstrained
