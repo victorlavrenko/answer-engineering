@@ -1187,11 +1187,15 @@ process.
 In certain cases, enforcing such constraints can also improve the consistency
 between intermediate reasoning and final conclusions, partially mitigating
 unfaithful visible reasoning (F1). For example, if a reasoning trajectory
-identifies sudden sensorineural hearing loss, a protocol rule may enforce
-explicit mention of urgent steroid treatment according to established guidelines
-\textcite{chandrasekhar2019ssnhl}. While this does not guarantee full
-faithfulness of chain-of-thought reasoning, it ensures that protocol-critical
-conclusions remain consistent with the stated reasoning.
+identifies sudden sensorineural hearing loss (SSNHL), a protocol rule may
+enforce urgency language or other protocol-compliance statements associated with
+the already generated diagnostic trajectory \textcite{chandrasekhar2019ssnhl}.
+Importantly, the rules used in this study do not inject the evaluated management
+answer itself (for example, corticosteroid treatment). Instead, diagnostic
+concepts act as local trajectory triggers used to prevent unsafe continuations
+or protocol omissions. While this does not guarantee full faithfulness of
+chain-of-thought reasoning, it helps maintain consistency between visible
+reasoning and protocol-critical requirements.
 
 \section{Runtime Framework for Answer Engineering}
 
@@ -1743,12 +1747,15 @@ artificially increasing the relative probability of one class.
 Under these constraints, improvements observed in both SSNHL and contrastive
 conductive cases are consistent with stabilization of the reasoning process
 rather than simple redistribution of diagnostic bias. Enforcing consistent
-reasoning order is consistent with reduced premature conclusions and improved alignment
-between intermediate reasoning steps and final decisions across task variants.
+reasoning order is consistent with reduced premature conclusions and improved
+alignment between intermediate reasoning steps and final decisions across task
+variants. This contrastive improvement is particularly informative because a
+rule set that merely favored or injected the SSNHL endpoint would be expected
+to degrade conductive cases rather than improve them.
 
 Across configurations, performance improves as intervention mechanisms become
 more localized and coordinated. This pattern is consistent with many observed
-incorrect decisions are compatible with premature or inconsistent reasoning
+incorrect decisions being compatible with premature or inconsistent reasoning
 trajectories rather than missing medical knowledge alone. In this controlled
 benchmark, stabilizing these trajectories during decoding restores
 protocol-consistent outcomes in a large fraction of cases.
@@ -2517,6 +2524,16 @@ expert-system logic. Instead, they operate as local trajectory constraints: they
 invalidate known incorrect reasoning continuations, normalize terminology, or
 enforce protocol-compliance statements when a relevant concept has already been
 generated.
+
+In the present study, diagnostic labels such as SSNHL may appear as rule
+triggers but are not inserted as gold-answer substitutions. The rules do not
+encode corticosteroid treatment or equivalent final-answer labels as direct
+insertions. Instead, such triggers are used to prevent premature diagnosis,
+enforce required analysis of Weber/Rinne findings, or add urgency language once
+the model has already entered the corresponding diagnostic trajectory. Removing
+these trigger conditions entirely would not necessarily yield a more
+conservative evaluation, since it could permit correct final answers reached
+through clinically invalid reasoning paths.
 
 The rule language is organized into several families corresponding to common
 trajectory-editing operations. These families are summarized in
