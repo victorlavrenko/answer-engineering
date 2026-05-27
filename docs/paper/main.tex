@@ -128,25 +128,26 @@ Decision Making in Large Language Models}
 
 \begin{abstract}
   Large language models can produce confident but wrong answers when they
-  violate procedures in domains where compliance is critical for decisions.
-  Step-by-step reasoning improves structure and transparency but often shifts
-  the distribution of errors rather than preventing them because procedures
-  remain systematically underused. This effect arises across multiple
-  protocol-driven domains; here, we evaluate it on a clinical benchmark
-  requiring differential diagnosis as a proof-of-concept, using a binary
-  adherence endpoint. In this task, compliant outcomes for the target condition
-  decreased from 54.5\% under unguided generation to 25.1\% when a
-  prompt-engineering baseline enforcing step-by-step reasoning was applied,
-  while performance on the contrastive condition increased from 1.6\% to 58.9\%.
-  We hypothesize that reliability can be improved by intervening locally during
-  generation—both selecting valid reasoning trajectories and enforcing required
-  tokens when violations occur. This hypothesis is implemented as a runtime
-  control mechanism in which rules enforce procedural compliance without
-  retraining models or performing global search. In this workflow, localized
-  trajectory intervention increased compliant outcomes for the target condition
-  from 25.1\% to 83.5\% and improved performance on the contrastive condition
-  from 58.9\% to 77.9\%, suggesting that failures are consistent with localized
-  structural violations that can be corrected through domain-specific protocols.
+  violate procedures in domains where compliance is critical. Step-by-step
+  reasoning improves structure and transparency but often shifts the
+  distribution of errors rather than preventing them because procedures remain
+  systematically underused. This effect arises across multiple protocol-driven
+  domains; here, we evaluate it on a clinical benchmark requiring differential
+  diagnosis using a binary adherence endpoint. In this task, compliant outcomes
+  for the target condition decreased from 54.5\% under unguided generation to
+  25.1\% under a step-by-step reasoning baseline, while performance on the
+  contrastive condition increased from 1.6\% to 58.9\%. We hypothesize that
+  reliability can be improved by intervening locally during generation—selecting
+  valid reasoning trajectories and enforcing required tokens when violations
+  occur. This hypothesis is implemented not as a new decoding algorithm but as a
+  deterministic runtime and authoring layer over standard autoregressive
+  generation, using rule-guided localized interventions to steer greedy decoding
+  toward protocol-compliant trajectories without retraining or global search. In
+  this workflow, localized trajectory intervention increased compliant outcomes
+  for the target condition from 25.1\% to 83.5\% and increased protocol
+  adherence on the contrastive condition from 58.9\% to 77.9\%, suggesting that
+  failures are consistent with structural violations that can be corrected
+  through domain-specific protocols.
 \end{abstract}
 
 \section{Introduction}\label{sec:introduction}
@@ -1680,9 +1681,9 @@ reasoning, and results in low balanced accuracy.
 
 Introducing step-by-step reasoning changes the error pattern but does not
 resolve the underlying instability. Compared with the unguided baseline, the
-reasoning configuration improves acceptance on conductive cases but reduces
-acceptance on true SSNHL cases. Balanced accuracy increases relative to the
-baseline, but the improvement reflects a redistribution of errors rather than
+reasoning configuration increases acceptance on conductive cases but reduces
+acceptance on true SSNHL cases. Balanced accuracy shifts relative to the
+baseline, but this change reflects redistribution of errors rather than
 consistent protocol compliance. The model becomes less biased toward SSNHL but
 more likely to misclassify true SSNHL cases as conductive hearing loss.
 
@@ -1697,12 +1698,12 @@ to explore diverse reasoning trajectories during decoding
 \cite{vijayakumar2016diverse}. Candidate outputs that violate critical
 constraints are rejected or replaced with compliant alternatives.
 
-This mechanism improves reliability relative to the reasoning configuration by
-reducing the number of unacceptable decisions while preserving the underlying
-generation process. Because validation operates at the level of completed
-candidate outputs, the reasoning trajectory itself is not modified. Performance
-improvements therefore arise from selecting compliant alternatives rather than
-from changing the model's diagnostic bias during generation.
+This mechanism stabilizes protocol adherence relative to the reasoning
+configuration by reducing the number of unacceptable decisions while preserving
+the underlying generation process. Because validation operates at the level of
+completed candidate outputs, the reasoning trajectory itself is not modified.
+Observed adherence gains therefore arise from selecting compliant alternatives
+rather than from changing the model's diagnostic bias during generation.
 
 \paragraph{Local validation}
 
@@ -1754,25 +1755,26 @@ example, early diagnostic conclusions were prohibited uniformly, including
 premature inference of both conductive hearing loss and SSNHL.\@ All
 trajectories were required to follow the same reasoning sequence, beginning with
 structured test interpretation and proceeding to diagnosis only after required
-evidence had been evaluated. This symmetric enforcement ensures that
-improvements do not arise from suppressing alternative diagnostic pathways or
+evidence had been evaluated. This symmetric enforcement ensures that observed
+adherence gains do not arise from suppressing alternative diagnostic pathways or
 artificially increasing the relative probability of one class.
 
-Under these constraints, improvements observed in both SSNHL and contrastive
-conductive cases are consistent with stabilization of the reasoning process
-rather than simple redistribution of diagnostic bias. Enforcing consistent
-reasoning order is consistent with reduced premature conclusions and improved
-alignment between intermediate reasoning steps and final decisions across task
-variants. This contrastive improvement is particularly informative because a
-rule set that merely favored or injected the SSNHL endpoint would be expected
-to degrade conductive cases rather than improve them.
+Under these constraints, simultaneous adherence gains observed in both SSNHL and
+contrastive conductive cases are consistent with stabilization of the reasoning
+process rather than simple redistribution of diagnostic bias. Enforcing
+consistent reasoning order is consistent with reduced premature conclusions and
+more stable alignment between intermediate reasoning steps and final decisions
+across task variants. This contrastive adherence effect is particularly
+informative because a rule set that merely favored or injected the SSNHL
+endpoint would be expected to degrade conductive cases rather than improve them.
 
-Across configurations, performance improves as intervention mechanisms become
-more localized and coordinated. This pattern is consistent with many observed
-incorrect decisions being compatible with premature or inconsistent reasoning
-trajectories rather than missing medical knowledge alone. In this controlled
-benchmark, stabilizing these trajectories during decoding restores
-protocol-consistent outcomes in a large fraction of cases.
+Across configurations, protocol-constrained behavior becomes progressively more
+stable as intervention mechanisms become more localized and coordinated. This
+pattern is consistent with many observed incorrect decisions being compatible
+with premature or inconsistent reasoning trajectories rather than missing
+medical knowledge alone. In this controlled benchmark, stabilizing these
+trajectories during decoding restores protocol-consistent outcomes in a large
+fraction of cases.
 
 \subsection{Runtime telemetry and intervention behavior}
 
@@ -2264,10 +2266,10 @@ configurations. Differences in prior distributions, verbosity patterns, or
 reasoning stability may influence both intervention frequency and repair cost.
 Operational characteristics should therefore be interpreted as model-dependent.
 
-Improved protocol adherence does not imply improved real-world performance. The
-evaluation measures conformity to procedural requirements rather than downstream
-clinical or operational outcomes. External validation in realistic decision
-environments remains necessary.
+More stable protocol adherence does not imply improved real-world performance.
+The evaluation measures conformity to procedural requirements rather than
+downstream clinical or operational outcomes. External validation in realistic
+decision environments remains necessary.
 
 Generalization to new domains depends on the presence of explicit procedural
 structure and locally correctable reasoning errors. Tasks lacking stable
@@ -2784,8 +2786,8 @@ detected. \\
 
 \bottomrule
 \end{tabularx}
-\caption{Terminology used for trajectory control and runtime intervention.}
-\label{tab:taxonomy_terms}
+\caption{Terminology used for trajectory control and runtime
+intervention.}\label{tab:taxonomy_terms}
 \end{table}
 
 \paragraph{Relation to nearby control surfaces.}
