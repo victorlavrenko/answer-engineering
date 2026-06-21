@@ -44,15 +44,16 @@
 \titleformat{\section}
 {\large\bfseries\raggedright} {\thesection} {1em} {}
 
-\usepackage[ backend=biber, style=authoryear, maxcitenames=2, giveninits=true,
-uniquename=init, doi=true, url=true, isbn=false ]{biblatex}
+\usepackage[ backend=biber, bibstyle=authoryear, citestyle=authoryear,
+  maxcitenames=2, giveninits=true, uniquename=init, doi=true, url=true,
+  isbn=false ]{biblatex}
 
 \usepackage[ colorlinks=true, linkcolor=blue, citecolor=blue, urlcolor=blue
 ]{hyperref}
 
 \UseTblrLibrary{booktabs}
 \usetikzlibrary{arrows.meta,positioning,decorations.pathreplacing,
-shapes.geometric}
+shapes.geometric,calc}
 \newtheorem{theorem}{Theorem}
 
 \normalem           % keeps \emph normal (important)
@@ -104,6 +105,40 @@ singlelinecheck=false }
   \href{https://huggingface.co/#1}{\nolinkurl{#1}}%
 }
 
+\newcommand{\failmark}{[invalid]}
+
+% Public code repository.
+\newcommand{\aegitbranch}{main}
+\newcommand{\aegitbase}{%
+  https://github.com/victorlavrenko/answer-engineering/blob/\aegitbranch%
+}
+\newcommand{\ghfile}[1]{%
+  \href{\aegitbase/#1}{\nolinkurl{#1}}%
+}
+
+% Public Hugging Face reproduction run.
+% Update only this value when replacing the public reproduction run.
+\newcommand{\aehfrun}{run-20260428T134716Z}
+\newcommand{\aehfbase}{%
+  https://huggingface.co/datasets/lavrenko/answer-engineering/tree/main/\aehfrun%
+}
+\newcommand{\hfrunroot}{%
+  \href{\aehfbase}{\nolinkurl{\aehfrun}}%
+}
+\newcommand{\hfdir}[1]{%
+  \href{\aehfbase/#1}{\nolinkurl{\aehfrun/#1}}%
+}
+
+% One concrete subrun used only as an example link.
+\newcommand{\aehfsamplesubrun}{subrun-007-trajectory-editing-orl-ssnhl-acute}
+\newcommand{\hfsamplesubrun}{%
+  \href{\aehfbase/\aehfsamplesubrun}{\nolinkurl{\aehfrun/\aehfsamplesubrun}}%
+}
+\newcommand{\hfsampledir}[1]{%
+  \href{\aehfbase/\aehfsamplesubrun/#1}%
+       {\nolinkurl{\aehfrun/\aehfsamplesubrun/#1}}%
+}
+
 \input{generated/paper-metrics.tex}
 
 \addbibresource{references.bib}
@@ -111,16 +146,17 @@ singlelinecheck=false }
 \title{Answer Engineering: Local Trajectory Editing for Protocol-Constrained
 Decision Making in Large Language Models}
 
-\author{ Victor Lavrenko\\
+\author{%
+  Victor Lavrenko\\
   \small PeaceTech VC, Israel\\
-  \small victor@peacetech.vc
+  \small \texttt{victor@peacetech.vc}
   \and
-  Anastasiia Molodnitskaia, MD\\
-  \small Department of Otolaryngology--Head and Neck Surgery\\
-  \small Rambam Health Care Campus, Haifa, Israel\\
-\small a\_molodnitskaia@rmc.gov.il }
+  Anastasiia Molodnitskaia\\
+  \small Rambam Health Care Campus, Israel\\
+  \small \texttt{a\_molodnitskaia@rambam.health.gov.il}
+}
 
-\date{\today}
+\date{June 19, 2026}
 
 \begin{document}
 
@@ -137,17 +173,17 @@ Decision Making in Large Language Models}
   for the target condition decreased from 54.5\% under unguided generation to
   25.1\% under a step-by-step reasoning baseline, while performance on the
   contrastive condition increased from 1.6\% to 58.9\%. We hypothesize that
-  reliability can be improved by intervening locally during generation—selecting
-  valid reasoning trajectories and enforcing required tokens when violations
-  occur. This hypothesis is implemented not as a new decoding algorithm but as a
-  deterministic runtime and authoring layer over standard autoregressive
-  generation, using rule-guided localized interventions to steer greedy decoding
-  toward protocol-compliant trajectories without retraining or global search. In
-  this workflow, localized trajectory intervention increased compliant outcomes
-  for the target condition from 25.1\% to 83.5\% and increased protocol
-  adherence on the contrastive condition from 58.9\% to 77.9\%, suggesting that
-  failures are consistent with structural violations that can be corrected
-  through domain-specific protocols.
+  reliability can be improved by intervening locally during generation,
+  selecting valid reasoning trajectories and enforcing required tokens when
+  violations occur. This hypothesis is implemented not as a new decoding
+  algorithm but as a deterministic runtime and authoring layer over standard
+  autoregressive generation, using rule-guided localized interventions to steer
+  greedy decoding toward protocol-compliant trajectories without retraining or
+  global search. In this workflow, localized trajectory intervention increased
+  compliant outcomes for the target condition from 25.1\% to 83.5\% and
+  increased protocol adherence on the contrastive condition from 58.9\% to
+  77.9\%, suggesting that failures are consistent with structural violations
+  that can be corrected through domain-specific protocols.
 \end{abstract}
 
 \section{Introduction}\label{sec:introduction}
@@ -211,8 +247,8 @@ capability. Unlike prompting, constrained decoding, or workflow-level
 guardrails, Answer Engineering targets localized intervention within the
 generated reasoning trajectory itself.
 
-Evidence from clinical decision-making—one of the most extensively studied
-protocol-governed domains—illustrates the magnitude of this challenge. In a
+Evidence from clinical decision-making---one of the most extensively studied
+protocol-governed domains---illustrates the magnitude of this challenge. In a
 benchmark evaluating guideline adherence across 17 large language models and 20
 diagnostic scenarios spanning 13 medical specialties, the best-performing model
 achieved only 41.9/50 on a standardized protocol-adherence score
@@ -242,7 +278,7 @@ problem statement and the previously generated steps.
 We use $\mathcal{R}$ for the human-readable sequence of reasoning steps and
 $T=x_{1:t}$ for the token-level prefix operated on by the runtime.
 
-In practice, reasoning trajectories may contain localized failures—for example,
+In practice, reasoning trajectories may contain localized failures---for example,
 when a required diagnostic distinction is omitted or a mandatory procedural step
 is skipped. Such errors may affect both intermediate reasoning and the final
 answer delivered to the user. Empirical evidence suggests that improving
@@ -458,41 +494,37 @@ methods mitigate these failure modes.
   \begin{tblr}{ colspec = {Q[l,10.5cm]ccccc}, row{1} = {font=\bfseries}, hlines
     } Method class & F1 & F2 & F3 & F4 & F5 \\
 
-    Prompting / CoT
-    \cite{wei2022cot}
-    & \partialcov & \partialcov & \partialcov & \none & \none \\
+    Prompting / CoT \parencite{wei2022cot} & \partialcov & \partialcov &
+    \partialcov & \none & \none \\
 
-    Self-consistency / sampling
-    \cite{wang2023selfconsistency}
-    & \partialcov & \partialcov & \partialcov & \none & \none \\
+    Self-consistency / sampling \parencite{wang2023selfconsistency} &
+    \partialcov & \partialcov & \partialcov & \none & \none \\
 
-    ReAct / agent reasoning
-    \cite{yao2023react,shinn2023reflexion}
-    & \partialcov & \partialcov & \partialcov & \none & \none \\
+    ReAct / agent reasoning \parencite{yao2023react,shinn2023reflexion} &
+    \partialcov & \partialcov & \partialcov & \none & \none \\
 
     Structured reasoning / scaffolds
-    \cite{zhou2025structured,yao2023treeofthoughts}
-    & \partialcov & \partialcov & \partialcov & \none & \none \\
+    \parencite{zhou2025structured,yao2023treeofthoughts} & \partialcov &
+    \partialcov & \partialcov & \none & \none \\
 
     Verification / correction / calibration
-    \cite{deng2023answercalibration,tyen2024cannotfind}
-    & \partialcov & \none & \partialcov & \none & \none \\
+    \parencite{deng2023answercalibration,tyen2024cannotfind} & \partialcov &
+    \none & \partialcov & \none & \none \\
 
     Principle-based alignment / self-critique
-    \cite{bai2022constitutionalai}
-    & \partialcov & \partialcov & \partialcov & \none & \none \\
+    \parencite{bai2022constitutionalai} & \partialcov & \partialcov &
+    \partialcov & \none & \none \\
 
     Process reward models / trajectory scoring
-    \cite{lightman2023prm800k,yun2025medprm}
-    & \partialcov & \partialcov & \partialcov & \partialcov & \none \\
+    \parencite{lightman2023prm800k,yun2025medprm} & \partialcov & \partialcov &
+    \partialcov & \partialcov & \none \\
 
     Structured-output and guided decoding
-    \cite{yang2021fudge,shi2023contextawaredecoding,koo2024automata,zhao2024ctg,
+    \parencite{yang2021fudge,shi2023contextawaredecoding,koo2024automata,zhao2024ctg,
     srivatsa2024deal} & \none & \none & \none & \partialcov & \partialcov \\
 
-    Rule-based / expert systems
-    \cite{liu2023trustworthy,zhao2024ctg}
-    & \none & \none & \none & \full & \full \\
+    Rule-based / expert systems \parencite{liu2023trustworthy,zhao2024ctg} &
+    \none & \none & \none & \full & \full \\
 
     \midrule
     \textbf{Answer Engineering (this work)}
@@ -503,10 +535,11 @@ methods mitigate these failure modes.
   \caption{Coverage of protocol failure modes by representative classes of
     approaches. F1: unfaithful reasoning; F2: prompt drift; F3: rationalization;
     F4: local protocol inconsistencies; F5: omission of mandatory protocol
-    steps. \full~strong coverage, \partialcov~partial or indirect mitigation,
-    \none~no direct coverage. For constrained decoding, partial coverage applies
-    only when mandatory protocol elements can be encoded explicitly in the
-    constrained output representation.}\label{tab:failure-mode-comparison}
+    steps. Legend: \full~strong coverage, \partialcov~partial or indirect
+    mitigation, \none~no direct coverage. For constrained decoding, partial
+    coverage applies only when mandatory protocol elements can be encoded
+    explicitly in the constrained output
+    representation.}\label{tab:failure-mode-comparison}
 \end{table*}
 
 Beyond empirical coverage of failure modes, existing approaches can also be
@@ -572,27 +605,27 @@ in how they influence the generation process.
     Prompting / Chain-of-Thought & Prompt instructions and demonstrations &
     \cmark & \xmark & \xmark & \xmark & \xmark & Encourages structured reasoning
     but cannot enforce or repair incorrect steps
-    \cite{wei2022cot,wang2023selfconsistency} \\
+    \parencite{wei2022cot,wang2023selfconsistency} \\
 
     Reflection / retry & Iterative self-critique after answer generation &
     \partialmark & \partialmark & \partialmark & \partialmark & \partialmark &
     Repairs occur after an answer exists rather than during generation
-    \cite{shinn2023reflexion,bai2022constitutionalai} \\
+    \parencite{shinn2023reflexion,bai2022constitutionalai} \\
 
     Verification / auditing & External validators or checkers & \xmark &
     \partialmark & \xmark & \partialmark & \xmark & Detects violations but
     typically does not alter reasoning in real time
-    \cite{lanham2023measuringfaithfulnesscot,lyu2023faithfulcot} \\
+    \parencite{lanham2023measuringfaithfulnesscot,lyu2023faithfulcot} \\
 
     Constrained decoding & Token-level constraints or classifiers & \partialmark
     & \partialmark & \partialmark & \xmark & \cmark & Controls token
     admissibility rather than reasoning validity
-    \cite{yang2021fudge,koo2024automata,srivatsa2024deal} \\
+    \parencite{yang2021fudge,koo2024automata,srivatsa2024deal} \\
 
     Trajectory search & Selection among sampled reasoning paths & \partialmark &
     \partialmark & \xmark & \xmark & \partialmark & Chooses among alternatives
     but does not locally repair a trajectory
-    \cite{yao2023treeofthoughts,wang2023selfconsistency} \\
+    \parencite{yao2023treeofthoughts,wang2023selfconsistency} \\
 
     \textbf{Answer Engineering}
     & \textbf{Local protocol constraints applied during decoding} &
@@ -801,8 +834,7 @@ and Answer Engineering intervenes locally within the generated reasoning
 trajectory itself.
 
 These limitations motivate the approach summarized in
-Tables~\ref{tab:failure-mode-comparison},
-\ref{tab:control-surfaces},
+Tables~\ref{tab:failure-mode-comparison},~\ref{tab:control-surfaces},
 and~\ref{tab:trajectory_operations}. In
 this work we develop \emph{Answer Engineering}, a decoding-time framework that
 enforces protocol constraints through local intervention in the evolving
@@ -1471,10 +1503,11 @@ inconsistent interpretation of diagnostic tests, premature conclusions, and
 omission of mandatory protocol steps.
 
 All experiments used the publicly released medical language model
-\texttt{OpenMeditron/Meditron3-8B}
-(revision \texttt{15914bcb040cd1a4f263afcd85b84f09ad2efd95})
-\parencite{openmeditron2025meditron3_8b}. No local model modifications
-were applied. All evaluations were executed with
+\hfmodel{OpenMeditron/Meditron3-8B} % chktex 8
+at revision
+\href{https://huggingface.co/OpenMeditron/Meditron3-8B/tree/15914bcb040cd1a4f263afcd85b84f09ad2efd95}
+{\texttt{15914bcb040c}}~\parencite{openmeditron2025meditron3_8b}. No local
+model modifications were applied. All evaluations were executed with
 deterministic decoding settings, ensuring that differences between
 configurations reflect intervention behavior rather than sampling variability.
 Trajectory editing was applied during decoding using the runtime control loop in
@@ -1491,7 +1524,7 @@ requiring prompt evaluation.\footnote{Clinically, SSNHL is typically defined as
 a sensorineural hearing loss of at least 30 dB affecting three consecutive
 frequencies and developing within 72 hours \parencite{chandrasekhar2019ssnhl}.}
 In this benchmark, diagnosis depends on combining symptom timing with bedside
-Weber and Rinne tuning-fork findings under standard AAO--HNS interpretation
+Weber and Rinne tuning-fork findings under standard AAO-HNS interpretation
 rules.\footnote{Appendix~\ref{app:clinical_endpoint} reproduces the
 benchmark-facing interpretation summary used for Weber and Rinne testing.}
 
@@ -1660,9 +1693,8 @@ documented subset of possible intervention policies: unguided generation,
 reasoning, global validation, local validation, Replace/After-only editing, and
 the full trajectory-editing stack. Branch-aware control and adaptive or
 confidence-triggered policies are discussed in Future Work
-(Sections~\ref{sec:future_branch_aware} and
-\ref{sec:future_adaptive_policies}) and are therefore not included in the
-present ablation matrix.
+(Sections~\ref{sec:future_branch_aware} and~\ref{sec:future_adaptive_policies})
+and are therefore not included in the present ablation matrix.
 
 The ruleset was finalized before test evaluation, and no rule modifications were
 made after examining test outputs except for post hoc failure analysis reported
@@ -1692,10 +1724,10 @@ more likely to misclassify true SSNHL cases as conductive hearing loss.
 Global validation is a widely used constraint-enforcement strategy in sequence
 generation systems, in which multiple candidate responses are generated and
 filtered against protocol requirements before final selection
-\cite{hokamp2017constrained,zhang2023constrained,koo2024automata}. In the
+\parencite{hokamp2017constrained,zhang2023constrained,koo2024automata}. In the
 present evaluation, alternative responses are produced using group beam search
 to explore diverse reasoning trajectories during decoding
-\cite{vijayakumar2016diverse}. Candidate outputs that violate critical
+\parencite{vijayakumar2016diverse}. Candidate outputs that violate critical
 constraints are rejected or replaced with compliant alternatives.
 
 This mechanism stabilizes protocol adherence relative to the reasoning
@@ -1735,7 +1767,7 @@ surrounding generation.
 
 This mechanism can correct isolated protocol failures without regenerating or
 selecting among full candidate responses. However, when applied without local
-validation, edits are limited to predefined trigger--repair patterns and do not
+validation, edits are limited to predefined trigger-repair patterns and do not
 provide a general mechanism for detecting and resolving arbitrary local
 violations during generation.
 
@@ -1778,7 +1810,7 @@ fraction of cases.
 
 \subsection{Runtime telemetry and intervention behavior}
 
-Tables~\ref{tab:runtime-interventions} and \ref{tab:runtime-alternatives}
+Tables~\ref{tab:runtime-interventions} and~\ref{tab:runtime-alternatives}
 summarize trajectory-editing behavior on the SSNHL subset only
 ($N=\PaperEvalN$).
 
@@ -1792,9 +1824,11 @@ resolve avoid-rule episodes. Percentile values indicate the minimum number of
 alternative trajectories required to resolve the specified fraction of episodes.
 The ``episodes exhausting alternative budget'' metric identifies episodes in
 which the predefined alternative budget was fully consumed%
-\footnote{Budget exhaustion does not indicate failure to produce a final answer.
-  In such cases, generation continues using the highest-scoring available
-  trajectory after the alternative search budget is reached.}
+\footnote{The ``episodes exhausting alternative budget'' metric identifies
+episodes in which the predefined alternative budget was fully consumed. Budget
+exhaustion does not indicate failure to produce a final answer; in such cases,
+generation continues using the highest-scoring available trajectory after the
+alternative search budget is reached.}
 
 All telemetry metrics are computed directly from structured runtime logs using
 the same instrumentation used to generate the reported evaluation tables,
@@ -1810,7 +1844,7 @@ ensuring consistency between behavioral telemetry and outcome metrics.
     Metric & Value \\
     \midrule
 
-    "Avoid" interventions per case & \RuntimeAvoidInterventionsPerCase{} \\
+    ``Avoid'' interventions per case & \RuntimeAvoidInterventionsPerCase{} \\
 
     All interventions per case & \RuntimeAvgInterventionsPerCase{} \\
 
@@ -1833,7 +1867,7 @@ ensuring consistency between behavioral telemetry and outcome metrics.
     Metric & Value \\
     \midrule
 
-    Avgerage alternatives tried & \RuntimeAvgAlternativesTried{} \\
+    Average alternatives tried & \RuntimeAvgAlternativesTried{} \\
 
     Alternatives for 50\% resolution &
     \RuntimeAlternativesForFiftyPctResolution{} \\
@@ -1870,7 +1904,7 @@ and the corresponding management statement.
     ``The patient presents with sudden hearing loss in the \textbf{left} ear,
     which is a concerning symptom. The \textbf{Weber} test lateralizing to the
     \textbf{right} ear suggests that the left ear has a
-    \textbf{\sout{conductive}}'' & Contralateral Weber lateralization
+    \textbf{conductive~\failmark}'' & Contralateral Weber lateralization
     invalidates conductive inference & ``The patient presents with sudden
     hearing loss in the left ear, which is a concerning symptom. The Weber test
     lateralizes to the right ear\emph{, indicating that the left ear is worse,
@@ -1879,7 +1913,7 @@ and the corresponding management statement.
     \addlinespace
 
     ``\ldots{} and the \textbf{Rinne} test is \textbf{positive} on the left ear,
-    suggesting that the hearing loss is \textbf{\sout{conductive}}'' & Positive
+    suggesting that the hearing loss is \textbf{conductive~\failmark}'' & Positive
     Rinne invalidates conductive inference & ``\ldots{}, and the Rinne test is
     positive on the left ear\emph{, indicating that air conduction is better
     than bone conduction\ldots}'' \\
@@ -1888,7 +1922,7 @@ and the corresponding management statement.
 
     ``The patient presents with \textbf{sudden} hearing loss \ldots These
     findings are consistent with \textbf{sensorineural hearing loss}'' & Enforce
-    “sudden” qualifier for sensorineural hearing loss & ``The patient presents
+    ``sudden'' qualifier for sensorineural hearing loss & ``The patient presents
     with sudden hearing loss \ldots These findings are consistent with
     \emph{\textbf{sudden}} sensorineural hearing loss\ldots{}'' \\
 
@@ -1896,7 +1930,7 @@ and the corresponding management statement.
 
     ``\ldots{}These findings are consistent with \textbf{sudden sensorineural
     hearing loss}'' & Add urgent treatment statement for SSNHL & ``\ldots{}These
-    findings are consistent with sudden sensorineural hearing loss. \emph{This
+    findings are consistent with sudden sensorineural hearing loss.\ \emph{This
     condition requires urgent treatment\ldots{}}'' \\
 
     \bottomrule
@@ -2017,10 +2051,9 @@ introduced failure).
 
 The reviewed failures were drawn directly from repository evaluation artifacts
 and runtime logs generated by the same deterministic reproduction pipeline used
-for Tables~\ref{tab:runtime-interventions},
-\ref{tab:runtime-alternatives},
-\ref{tab:edit-traces}, and
-\ref{tab:paired-trajectory-changes}. The repair traces shown below therefore
+for
+Tables~\ref{tab:runtime-interventions},~\ref{tab:runtime-alternatives},~\ref{tab:edit-traces},
+and~\ref{tab:paired-trajectory-changes}. The repair traces shown below therefore
 represent reproducible runtime behavior rather than manually constructed
 examples.
 
@@ -2138,10 +2171,10 @@ alone may be insufficient to induce stable step-wise analysis.
 Pathologies}\label{sec:model_sensitivity}
 
 Although all formal results in this study use
-\hfmodel{OpenMeditron/Meditron3-8B}, we conducted exploratory pilot runs on
-additional medical-language models to assess how trajectory-level control
-behaves under different baseline reasoning characteristics. In particular, we
-tested \hfmodel{OpenMeditron/Meditron3-Qwen2.5-7B} and
+\hfmodel{OpenMeditron/Meditron3-8B}, we conducted exploratory pilot % chktex 8
+runs on additional medical-language models to assess how trajectory-level
+control behaves under different baseline reasoning characteristics. In
+particular, we tested \hfmodel{OpenMeditron/Meditron3-Qwen2.5-7B} and % chktex 8
 \hfmodel{HPAI-BSC/Llama3.1-Aloe-Beta-8B}. These pilots were performed on small
 samples far smaller than the primary benchmark and were intended for qualitative
 inspection rather than statistical comparison. For this reason, we report
@@ -2502,7 +2535,7 @@ The main experiments can be reproduced using the Google Colab notebook:
 
 Experiments were executed in Google Colab on a G4 GPU runtime. In this runtime,
 \texttt{nvidia-smi} identified the provisioned accelerator as an NVIDIA RTX PRO
-6000 Blackwell GPU with approximately 96\,GB VRAM.@\
+6000 Blackwell GPU with approximately 96\,GB VRAM\@.
 
 All reported runs were executed in this Colab environment using deterministic
 greedy decoding. The evaluation protocol is therefore deterministic rather than
@@ -2528,16 +2561,18 @@ from evaluation outputs into a machine-readable \TeX\ file:
 {docs/paper/generated/paper-metrics.tex}
 \end{center}
 
-The experiments use \texttt{OpenMeditron/Meditron3-8B} from Hugging Face. The
-reproduction manifest records the model/config used by the run; however, the
-all reported results were generated using a single fixed model revision.
+The experiments use \hfmodel{OpenMeditron/Meditron3-8B} from Hugging Face. % chktex 8
+The generated report artifacts record the code commit, dataset id and split,
+model id, evaluation counts, case-type scope, run/subrun identifiers, and
+paper-facing metric outputs. All reported results were generated using a single
+fixed model configuration.
 
 \paragraph{Appendix overview.}
 
 The appendices provide concise summaries for reviewers, including a compact
 overview of the rule language (Appendix~\ref{app:rule_language}), representative
-rule targets (Appendix~\ref{app:rule_examples}), a summary of the reproduction
-pipeline and generated artifacts (Appendix~\ref{app:implementation}),
+rule targets (Appendix~\ref{app:rule_examples}), an implementation and artifact
+map for auditing reported results (Appendix~\ref{app:implementation}),
 representative evaluation prompts (Appendix~\ref{app:prompt_snippets}), and the
 clinical justification of the benchmark endpoint
 (Appendix~\ref{app:clinical_endpoint}).
@@ -2554,7 +2589,7 @@ trajectory-editing constraints that domain experts can review and modify without
 changing the model code. The rules are parsed into a structured representation
 and compiled into executable rule plans used during generation.
 
-Importantly, rules do not inject diagnoses or replace the model’s reasoning with
+Importantly, rules do not inject diagnoses or replace the model's reasoning with
 expert-system logic. Instead, they operate as local trajectory constraints: they
 invalidate known incorrect reasoning continuations, normalize terminology, or
 enforce protocol-compliance statements when a relevant concept has already been
@@ -2658,16 +2693,29 @@ diagnostic program.
     width=6cm] at (4.2,2.5) {Invalidate incorrect local continuations while the
     model continues reasoning};
 
-    \node[box] (r0) at (4.2,1.4) {Model begins reasoning}; \node[smallbox] (r1)
-    at (2.5,0.1) {``conductive loss''}; \node[smallbox] (r2) at (5.9,0.1)
-    {``interpret tests''}; \node[box] (r3) at (5.9,-1.2) {Generation continues};
+    \node[box] (r0) at (4.2,1.4) {Model begins reasoning};
 
-    \draw[arrow] (r0) -- (r1); \draw[arrow] (r0) -- (r2); \draw[arrow] (r2) --
-    (r3);
+    \node[smallbox, dashed, line width=0.6pt] (r1)
+      at (2.5,0.1) {``conductive loss''};
 
-    % Cross out invalid branch
-    \draw[stop] (1.9,-0.5) -- (3.1,0.7); \draw[stop] (1.9,0.7) -- (3.1,-0.5);
+    \node[smallbox] (r2)
+      at (5.9,0.1) {``interpret tests''};
 
+    \node[box] (r3)
+      at (5.9,-1.2) {Generation continues};
+
+    \draw[arrow, dashed] (r0) -- (r1);
+    \draw[arrow] (r0) -- (r2);
+    \draw[arrow] (r2) -- (r3);
+
+    % Dead-end marker for rejected branch
+    \draw[line width=0.7pt] (r1.south) -- ++(0,-0.35);
+    \draw[line width=0.7pt] ($(r1.south)+(-0.22,-0.35)$) --
+                            ($(r1.south)+( 0.22,-0.35)$);
+
+    \node[font=\small, align=center]
+      at ($(r1.south)+(0,-0.65)$) {rejected by protocol};
+      
     % Separator
     \draw[densely dashed] (0,3.5) -- (0,-3.0);
 
@@ -2843,20 +2891,62 @@ The narrower claim investigated in this paper is that localized,
 rule-triggered runtime intervention can improve protocol compliance during
 generation while preserving the underlying autoregressive model.
 
-\appsection{Reproducibility note and artifact map}{app:implementation}
+\appsection{Implementation and artifact map}{app:implementation}
 
-Paper reproduction is exposed via \texttt{ae\_paper\_reproduction(...)} and a
-thin CLI wrapper (\texttt{python -m answer\_engineering.repro.paper\_ssnhl}).
-The run emits machine-readable artifacts including
-\texttt{results\_summary.json}, \texttt{telemetry\_summary.json},
-\texttt{paper\_tables.json}, and \texttt{run\_manifest.json}. The manifest
-records commit hash, model/config, ruleset hash, validation-slice definition,
-and run configuration. Reported generation uses deterministic greedy decoding,
-so the primary reproducibility mechanism is the fixed model, dataset, ruleset,
-and decoding configuration rather than stochastic sampling. Accordingly, the
-present evaluation emphasizes reproducible effect magnitude and paired
-trajectory behavior rather than repeated-sampling estimation of decoding
-uncertainty.
+The reproduction workflow is organized around
+\ghfile{notebooks/reproduce.ipynb}, which configures the dataset split, model
+identifier, evaluation size, token budget, telemetry publication option, and
+paper subruns. The notebook materializes the evaluation dataset and executes the
+configured subruns through the Answer Engineering generation runtime.
+
+The runtime generation path is implemented in
+\ghfile{src/answer_engineering/inference/answering.py} and
+\ghfile{src/answer_engineering/inference/decode/decode_loop.py}. Reported runs
+call \texttt{GenerationRuntime.generate} and use greedy token-by-token decoding,
+with rule intervention during generation when enabled.
+
+The notebook-facing reproduction facade is implemented in
+\ghfile{src/ae_paper_reproduction/api.py}. It exposes the objects used by the
+paper reproduction notebook, including \texttt{CachedHFDataset},
+\texttt{NotebookSubruns}, \texttt{SubrunResult}, and \texttt{Summary}.
+
+Summary construction and comparison assembly are implemented in
+\ghfile{src/ae_paper_reproduction/runner/session/summary.py}. The
+\texttt{Summary} object aggregates completed subruns, computes anchor
+comparisons, prepares telemetry rows, and invokes artifact generation.
+
+Local artifact materialization is implemented in
+\ghfile{src/ae_paper_reproduction/telemetry/artifacts.py}. A completed
+reproduction run writes a local group-level report bundle under
+\path{reports/runs/run-<group_run_id>/}. In the public artifact repository, the
+corresponding group-level files are available under \hfrunroot, with summary
+artifacts in \hfdir{artifacts}, row-oriented comparison data in \hfdir{data},
+and generated manuscript metrics in \hfdir{generated}.
+
+The group-level artifact directory contains \path{group_report.md},
+\path{group_summary.json}, \path{subruns.json}, \path{comparisons.json}, and
+\path{paper_metrics.json}. These files summarize the completed subruns,
+aggregate outcomes, anchor comparisons, and paper-facing metric values.
+
+Each local subrun is written under
+\path{reports/runs/run-<group_run_id>/subrun-<subrun_id>/}. The subrun
+directory contains \path{run_report.md}, \path{rules_original.md},
+\path{rules_with_stats.md}, \path{run_summary.json}, and \path{answers.json}.
+The public artifact repository mirrors this structure under concrete subrun
+directories. For example, \hfsamplesubrun{} contains subrun-level audit files in
+\hfsampledir{artifacts} and row-oriented telemetry files in
+\hfsampledir{data}. Generic subrun paths are written schematically as
+\texttt{subrun-<subrun-id>/} because the concrete subrun identifier depends
+on the evaluated paper variant.
+
+The paper-facing numerical artifact is
+\ghfile{docs/paper/generated/paper-metrics.tex}. It is generated by
+\ghfile{src/ae_paper_reproduction/telemetry/paper_metrics.py}, written locally
+for manuscript compilation, and published under
+\hfdir{generated/paper-metrics.tex}. The manuscript includes it through an
+\verb|\input| directive for \path{generated/paper-metrics.tex}. Reported
+numerical values are regenerated from evaluation outputs and consumed by the
+paper through generated \TeX\ macros.
 
 \appsection{Representative prompt snippets}{app:prompt_snippets}
 
@@ -2955,13 +3045,13 @@ endpoint}{app:clinical_endpoint}
 \paragraph{Guideline interpretation of Weber/Rinne findings.}
 Bedside tuning-fork testing provides a rapid method to distinguish conductive
 from sensorineural hearing loss. The interpretation rules for Weber and Rinne
-tuning-fork testing are summarized in Table~3 of the AAO--HNS sudden hearing
+tuning-fork testing are summarized in Table~3 of the AAO-HNS sudden hearing
 loss guideline issue \parencite{guidelinecentral_sshl}. For the Weber test, ``If
 the sound lateralizes to one ear, then: (a) There is CHL in that ear, or (b)
-There is SNHL in the opposite ear.'' For the Rinne test, the guideline states
+There is SNHL in the opposite ear''. For the Rinne test, the guideline states
 that ``If the sound is heard better by bone conduction in the same ear, then
-there is CHL in that ear,'' whereas ``If the sound is heard better by bone
-conduction but in the opposite ear, there is SNHL in the test ear.'' In standard
+there is CHL in that ear'', whereas ``If the sound is heard better by bone
+conduction but in the opposite ear, there is SNHL in the test ear''. In standard
 clinical shorthand, a \textit{positive Rinne} indicates air conduction greater
 than bone conduction, whereas a \textit{negative Rinne} indicates bone
 conduction greater than air conduction. Accordingly, a presentation in which the
