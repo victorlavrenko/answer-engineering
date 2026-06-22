@@ -82,7 +82,7 @@ class ProbeDefaults:
     use_group_beam_search: bool = True
     group_beam_search_repo_id: str = "transformers-community/group-beam-search"
     group_beam_search_revision: str | None = None
-    preload_group_beam_search: bool = True
+    preload_group_beam_search: bool = False
 
 
 @dataclass(frozen=True, slots=True)
