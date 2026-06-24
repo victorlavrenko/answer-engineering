@@ -427,6 +427,11 @@ class CustomGenerateConfig(Protocol):
         """Return the revision used when resolving the custom generation."""
         raise NotImplementedError
 
+    @property
+    def use_cache(self) -> bool | None:
+        """Return whether backend generate() should use model KV cache."""
+        raise NotImplementedError
+
 
 @dataclass(frozen=True, slots=True)
 class GenerationControl:

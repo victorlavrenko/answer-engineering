@@ -573,10 +573,12 @@ class GenerationRuntime(ChatGenerationRuntime):
         custom_generate = None
         trust_remote_code = False
         revision = None
+        use_cache = None
         if request.custom_generate_config is not None:
             custom_generate = request.custom_generate_config.custom_generate
             trust_remote_code = request.custom_generate_config.trust_remote_code
             revision = request.custom_generate_config.revision
+            use_cache = request.custom_generate_config.use_cache
 
         generate_fn = self._model.generate
         return generate_fn(
@@ -598,6 +600,7 @@ class GenerationRuntime(ChatGenerationRuntime):
             custom_generate=custom_generate,
             trust_remote_code=trust_remote_code,
             revision=revision,
+            use_cache=use_cache,
         )
 
     def generate(

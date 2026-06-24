@@ -50,6 +50,7 @@ class GroupBeamCustomGenerateConfig:
     custom_generate: str
     trust_remote_code: bool
     revision: str | None
+    use_cache: bool | None
 
     def __init__(
         self,
@@ -58,6 +59,7 @@ class GroupBeamCustomGenerateConfig:
         trust_remote_code: bool,
         revision: str | None,
         preload_group_beam_search: bool = False,
+        use_cache: bool | None = None,
     ) -> None:
         """Resolve custom-generation source and optional preload behavior.
 
@@ -94,16 +96,19 @@ class GroupBeamCustomGenerateConfig:
                 object.__setattr__(self, "custom_generate", custom_generate)
                 object.__setattr__(self, "trust_remote_code", trust_remote_code)
                 object.__setattr__(self, "revision", revision)
+                object.__setattr__(self, "use_cache", use_cache)
                 return
 
             object.__setattr__(self, "custom_generate", local_repo_path)
             object.__setattr__(self, "trust_remote_code", False)
             object.__setattr__(self, "revision", None)
+            object.__setattr__(self, "use_cache", use_cache)
             return
 
         object.__setattr__(self, "custom_generate", custom_generate)
         object.__setattr__(self, "trust_remote_code", trust_remote_code)
         object.__setattr__(self, "revision", revision)
+        object.__setattr__(self, "use_cache", use_cache)
 
 
 def _first_token_id(value: object) -> int | None:
@@ -252,6 +257,7 @@ class GroupedBeamGenerator:
                 revision=group_beam_search_revision,
                 trust_remote_code=True,
                 preload_group_beam_search=preload_group_beam_search,
+                use_cache=False,
             )
 
         generation_control = GenerationControl(
