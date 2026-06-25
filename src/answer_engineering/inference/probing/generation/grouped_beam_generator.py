@@ -257,7 +257,7 @@ class GroupedBeamGenerator:
                 revision=group_beam_search_revision,
                 trust_remote_code=True,
                 preload_group_beam_search=preload_group_beam_search,
-                use_cache=False,
+                use_cache=True,
             )
 
         generation_control = GenerationControl(
