@@ -31,6 +31,7 @@ def test_repository_docstrings_are_already_canonical() -> None:
                 ".venv",
                 ".pytest_cache",
                 "__pycache__",
+                "tmp",
             ),
             dirs_exist_ok=False,
         )

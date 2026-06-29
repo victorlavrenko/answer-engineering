@@ -19,6 +19,8 @@ Outputs:
 
 from __future__ import annotations
 
+from answer_engineering.engine.span_utils import clamp_index
+
 
 def find_sentence_end(text: str, start: int, limit: int) -> int:
     """Return the first sentence boundary between start and limit.
@@ -44,8 +46,8 @@ def find_sentence_end(text: str, start: int, limit: int) -> int:
         heuristic.
 
     """
-    i = max(0, start)
-    hi = min(len(text), max(start, limit))
+    i = clamp_index(start, text)
+    hi = max(i, clamp_index(limit, text))
     while i < hi:
         if text[i] in ".?!\n":
             return i
@@ -75,8 +77,8 @@ def find_clause_end(text: str, start: int, limit: int) -> int:
         own any higher-level linguistic interpretation of the returned index.
 
     """
-    i = max(0, start)
-    hi = min(len(text), max(start, limit))
+    i = clamp_index(start, text)
+    hi = max(i, clamp_index(limit, text))
     while i < hi:
         if text[i] in ",;:.?!\n":
             return i
@@ -86,8 +88,8 @@ def find_clause_end(text: str, start: int, limit: int) -> int:
 
 def find_clause_start(text: str, pos: int, limit: int) -> int:
     """Scan backward from ``pos`` to the start of the enclosing clause."""
-    lo = max(0, min(len(text), limit))
-    i = max(lo, min(len(text), pos))
+    lo = clamp_index(limit, text)
+    i = max(lo, clamp_index(pos, text))
     while i > lo:
         if text[i - 1] in ",;:.?!\n":
             return i

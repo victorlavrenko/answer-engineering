@@ -32,6 +32,7 @@ Open constraint:
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass, field
 
 import torch
@@ -46,6 +47,10 @@ from answer_engineering.engine.runtime.runtime_types import (
     Decision,
     TokenCharAlignment,
 )
+from answer_engineering.engine.span_utils import (
+    InvalidTokenAlignmentError,
+    validate_token_alignment_detailed,
+)
 from answer_engineering.inference.decode.state import (
     RebuiltPrefixState,
     StreamingDecodeState,
@@ -58,6 +63,8 @@ from answer_engineering.inference.prompting.prompt_prefix import (
     PrefixExpansion,
 )
 from answer_engineering.rules.compile.plan import PlanIR
+
+_LOG = logging.getLogger(__name__)
 
 
 def _retokenize_assistant(tok: TextCodec, text: str) -> list[int]:
@@ -87,6 +94,55 @@ def _retokenize_assistant(tok: TextCodec, text: str) -> list[int]:
     if not text:
         return list()
     return list(tok.encode(text, add_special_tokens=False))
+
+
+def _build_alignment_from_offsets(
+    tok: TextCodec, text: str
+) -> tuple[list[int], list[TokenCharAlignment]]:
+    encoded = tok(text, add_special_tokens=False, return_offsets_mapping=True)
+    token_ids = list(encoded["input_ids"])
+    offsets = list(encoded["offset_mapping"])
+    if len(token_ids) != len(offsets):
+        raise ValueError("token id / offset length mismatch")
+    alignment: list[TokenCharAlignment] = []
+    for i, (start, end) in enumerate(offsets):
+        alignment.append(
+            TokenCharAlignment(
+                token_index=i,
+                char_start=start,
+                char_end=end,
+                piece_text=text[start:end]
+                if 0 <= start <= end <= len(text)
+                else "",
+                token_id=token_ids[i],
+            )
+        )
+    err = validate_token_alignment_detailed(alignment, text)
+    if err is not None:
+        raise InvalidTokenAlignmentError(err)
+    return token_ids, alignment
+
+
+def _build_alignment_from_per_token_decode_if_exact(
+    tok: TextCodec, text: str, token_ids: list[int]
+) -> list[TokenCharAlignment]:
+    pieces = [tok.decode([tid], skip_special_tokens=True) for tid in token_ids]
+    if "".join(pieces) != text:
+        _LOG.debug("invalid_generated_alignment_unavailable")
+        return list()
+    alignment: list[TokenCharAlignment] = []
+    cursor = 0
+    for i, piece in enumerate(pieces):
+        start = cursor
+        cursor += len(piece)
+        alignment.append(
+            TokenCharAlignment(i, start, cursor, piece, token_ids[i])
+        )
+    err = validate_token_alignment_detailed(alignment, text)
+    if err is not None:
+        _LOG.debug("invalid_generated_alignment_unavailable %s", err.compact())
+        return list()
+    return alignment
 
 
 @dataclass(frozen=True, slots=True, init=False)
@@ -131,20 +187,34 @@ class RetokenizedAssistant:
             so character spans and token positions remain synchronized.
 
         """
-        token_ids = _retokenize_assistant(tok, text)
-        alignment: list[TokenCharAlignment] = []
-        cursor = 0
-        for token_id in token_ids:
-            piece = tok.decode([token_id], skip_special_tokens=True)
-            start = cursor
-            cursor += len(piece)
-            alignment.append(
-                TokenCharAlignment(
-                    token_index=len(alignment),
-                    char_start=start,
-                    char_end=cursor,
-                    piece_text=piece,
-                )
+        try:
+            token_ids, alignment = _build_alignment_from_offsets(tok, text)
+        except InvalidTokenAlignmentError as exc:
+            log = (
+                _LOG.warning
+                if exc.error.kind
+                in {
+                    "char_end_out_of_bounds",
+                    "negative_char_start",
+                    "char_end_before_start",
+                }
+                else _LOG.debug
+            )
+            log(
+                "invalid_generated_alignment_fallback_offsets %s",
+                exc.error.compact(),
+            )
+            token_ids = _retokenize_assistant(tok, text)
+            alignment = _build_alignment_from_per_token_decode_if_exact(
+                tok, text, token_ids
+            )
+        except (KeyError, NotImplementedError, TypeError, ValueError) as exc:
+            _LOG.debug(
+                "invalid_generated_alignment_fallback_offsets error=%s", exc
+            )
+            token_ids = _retokenize_assistant(tok, text)
+            alignment = _build_alignment_from_per_token_decode_if_exact(
+                tok, text, token_ids
             )
         object.__setattr__(self, "token_ids", token_ids)
         object.__setattr__(self, "alignment", alignment)

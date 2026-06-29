@@ -15,11 +15,18 @@ Boundary note:
 
 """
 
+import logging
 from collections.abc import Sequence
 from dataclasses import dataclass
 
 from answer_engineering.engine.runtime.runtime_types import TokenCharAlignment
+from answer_engineering.engine.span_utils import (
+    clamp_index,
+    validate_token_alignment_detailed,
+)
 from answer_engineering.inference.model_types import TextCodec
+
+_LOG = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, slots=True, init=False)
@@ -154,14 +161,34 @@ def _build_probe_prefix_ids(
         trustworthy; otherwise encode the document prefix text directly.
 
     """
+    abs_start = clamp_index(abs_start, doc_text)
     if generated_ids and generated_token_alignment:
-        aligned_ids = _slice_generated_prefix_ids(
-            generated_ids=generated_ids,
-            generated_token_alignment=generated_token_alignment,
-            abs_start=abs_start,
+        err = validate_token_alignment_detailed(
+            generated_token_alignment, doc_text
         )
-        if aligned_ids is not None:
-            return [*prompt_ids, *aligned_ids], True
+        if err is not None:
+            log = (
+                _LOG.warning
+                if err.kind
+                in {
+                    "char_end_out_of_bounds",
+                    "negative_char_start",
+                    "char_end_before_start",
+                }
+                else _LOG.debug
+            )
+            log(
+                "invalid_generated_alignment_fallback_reencode %s",
+                err.compact(),
+            )
+        else:
+            aligned_ids = _slice_generated_prefix_ids(
+                generated_ids=generated_ids,
+                generated_token_alignment=generated_token_alignment,
+                abs_start=abs_start,
+            )
+            if aligned_ids is not None:
+                return [*prompt_ids, *aligned_ids], True
 
     assistant_prefix_text = doc_text[:abs_start]
     assistant_prefix_ids = tok.encode(

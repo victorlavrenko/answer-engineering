@@ -11,6 +11,7 @@ Architectural role:
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from math import isfinite
@@ -22,6 +23,7 @@ from answer_engineering.engine.pipeline.attempts import (
     AttemptState,
 )
 from answer_engineering.engine.pipeline.events import (
+    PatchSkipped,
     ProposalScored,
 )
 from answer_engineering.engine.pipeline.messages import (
@@ -38,27 +40,117 @@ from answer_engineering.engine.scoring.base import (
     ScoringDiagnostics,
 )
 from answer_engineering.engine.selection import rule_winner
+from answer_engineering.engine.span_utils import describe_span, normalize_span
 from answer_engineering.engine.telemetry.events.event_sink import (
     NullRuntimeEventSink,
     RuntimeEventSink,
 )
 from answer_engineering.inference.prompting import prompt_prefix
 
+_LOG = logging.getLogger(__name__)
 
-def _editable_proposals(event: ProposalsReady) -> list[PatchProposal]:
-    """Filter out non-editing proposals before scoring.
 
-    Purpose:
-        Keep only proposals that actually modify the document and perform a
-        repeatable patch-application sanity check before score computation.
+def _editable_proposals(
+    event: ProposalsReady,
+    *,
+    event_sink: RuntimeEventSink | None = None,
+) -> list[PatchProposal]:
+    """Filter invalid/non-editing proposals before scoring."""
+    editable: list[PatchProposal] = []
+    text = event.ctx.doc.text
 
-    """
-    editable = [
-        proposal for proposal in event.proposals if proposal.op != PatchOp.NOOP
-    ]
-    for proposal in editable:
-        first = patcher.apply_patch(event.ctx.doc, proposal).text
-        assert first == patcher.apply_patch(event.ctx.doc, proposal).text
+    def skip(
+        proposal: PatchProposal,
+        reason: str,
+        *,
+        original_span: tuple[int, int] | None = None,
+        corrected_span: tuple[int, int] | None = None,
+    ) -> None:
+        event_original_span = (
+            original_span if original_span is not None else proposal.span_abs
+        )
+        if event_sink is not None:
+            event_sink.emit(
+                PatchSkipped(
+                    rule_id=proposal.rule_id,
+                    reason=reason,
+                    rule_name=event.ctx.rule.name,
+                    doc_len=len(text),
+                    original_span=event_original_span,
+                    corrected_span=corrected_span,
+                    span_abs=proposal.span_abs,
+                    nearby_text=describe_span(event_original_span, text),
+                    stage="scoring",
+                )
+            )
+        _LOG.warning(
+            "%s rule_id=%s rule_name=%r span_abs=%s original_span=%s "
+            "corrected_span=%s doc_len=%s op=%s %s",
+            reason,
+            proposal.rule_id,
+            event.ctx.rule.name,
+            proposal.span_abs,
+            original_span,
+            corrected_span,
+            len(text),
+            proposal.op.value,
+            describe_span(event_original_span, text),
+        )
+
+    for proposal in event.proposals:
+        if proposal.op == PatchOp.NOOP:
+            continue
+        if proposal.base_version_id != event.ctx.doc.version_id:
+            skip(proposal, "proposal_base_version_mismatch")
+            continue
+        if proposal.span_abs is None:
+            skip(proposal, "invalid_span_dropped")
+            continue
+        fixed = normalize_span(
+            proposal.span_abs, event.ctx.doc.text, mode="fallback_then_clamp"
+        )
+        if fixed.span is None:
+            skip(proposal, "invalid_span_dropped")
+            continue
+        if fixed.span != proposal.span_abs:
+            reason = fixed.reason or "invalid_span_clamped"
+            if event_sink is not None:
+                event_sink.emit(
+                    PatchSkipped(
+                        rule_id=proposal.rule_id,
+                        reason=reason,
+                        rule_name=event.ctx.rule.name,
+                        doc_len=len(text),
+                        original_span=fixed.original,
+                        corrected_span=fixed.span,
+                        span_abs=proposal.span_abs,
+                        nearby_text=describe_span(fixed.original, text),
+                        stage="scoring",
+                    )
+                )
+            proposal = proposal.with_updates(span_abs=fixed.span)
+            _LOG.warning(
+                "%s rule_id=%s rule_name=%r original_span=%s "
+                "corrected_span=%s doc_len=%s %s",
+                reason,
+                proposal.rule_id,
+                event.ctx.rule.name,
+                fixed.original,
+                fixed.span,
+                len(text),
+                describe_span(fixed.original, text),
+            )
+        try:
+            first = patcher.apply_patch(event.ctx.doc, proposal).text
+            second = patcher.apply_patch(event.ctx.doc, proposal).text
+        except ValueError as exc:
+            skip(proposal, "patcher_rejected_proposal")
+            _LOG.warning("patcher rejected proposal before scoring: %s", exc)
+            continue
+        if first != second:
+            skip(proposal, "unstable_patch_application")
+            continue
+        editable.append(proposal)
     return editable
 
 
@@ -133,7 +225,7 @@ class ScoringStage:
             conflicts or apply patches.
 
         """
-        editable = _editable_proposals(event)
+        editable = _editable_proposals(event, event_sink=self.event_sink)
         grouped = _group_by_span_and_op(editable)
 
         scored_all: list[ScoredProposal] = []

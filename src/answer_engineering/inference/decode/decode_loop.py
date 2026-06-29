@@ -33,6 +33,7 @@ Open constraint:
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 
 import torch
@@ -44,6 +45,7 @@ from answer_engineering.engine.orchestration.orchestrator import (
     PlanRunner,
 )
 from answer_engineering.engine.runtime.runtime_types import TokenCharAlignment
+from answer_engineering.engine.span_utils import validate_token_alignment
 from answer_engineering.engine.telemetry.aggregation.aggregator import (
     RuntimeTelemetryAggregator,
 )
@@ -77,6 +79,8 @@ from answer_engineering.infra.console.reactive_visible_printer import (
 )
 from answer_engineering.infra.console.text_emitter import StdoutTextEmitter
 from answer_engineering.infra.console.visible_layout import VisibleTextLayouter
+
+_LOG = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, slots=True)
@@ -190,7 +194,10 @@ def collect_stop_token_ids(tok: TextCodec) -> set[int]:
 
 def _append_incremental_token_alignment(
     alignment: list[TokenCharAlignment],
-    piece_text: str,
+    *,
+    current_text: str,
+    token_text: str,
+    token_id: int | None = None,
 ) -> None:
     """Append one decoded piece to token-to-character alignment.
 
@@ -216,14 +223,15 @@ def _append_incremental_token_alignment(
         appended in decode order and does not repair earlier spans.
 
     """
-    start = alignment[-1].char_end if alignment else 0
-    end = start + len(piece_text)
+    start = len(current_text)
+    end = start + len(token_text)
     alignment.append(
         TokenCharAlignment(
             token_index=len(alignment),
             char_start=start,
             char_end=end,
-            piece_text=piece_text,
+            piece_text=token_text,
+            token_id=token_id,
         )
     )
 
@@ -351,10 +359,23 @@ class GreedyDecoder:
             next_id = int(torch.argmax(logits, dim=-1).item())
             state.generated_token_ids.append(next_id)
             token_text = tok.decode([next_id], skip_special_tokens=True)
+            old_text = state.assistant_visible_text
+            new_text = old_text + token_text
             _append_incremental_token_alignment(
-                state.generated_token_alignment, token_text
+                state.generated_token_alignment,
+                current_text=old_text,
+                token_text=token_text,
+                token_id=next_id,
             )
-            state.assistant_visible_text += token_text
+            state.assistant_visible_text = new_text
+            err = validate_token_alignment(
+                state.generated_token_alignment, state.assistant_visible_text
+            )
+            if err is not None:
+                _LOG.warning(
+                    "invalid_incremental_alignment_reset error=%s", err
+                )
+                state.generated_token_alignment = []
             state.next_input = torch.tensor(
                 [[next_id]],
                 dtype=torch.long,

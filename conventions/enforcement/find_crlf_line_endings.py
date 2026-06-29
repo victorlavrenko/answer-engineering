@@ -55,6 +55,7 @@ def find_crlf_line_endings(root: Path) -> list[CrlfMatch]:
                 "paper",
                 "dist",
                 "build",
+                "tmp",
             }
             for part in path.parts
         ):

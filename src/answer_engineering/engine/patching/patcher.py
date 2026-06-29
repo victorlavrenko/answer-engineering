@@ -162,6 +162,35 @@ def normalize_replace_payload(
     return out
 
 
+def _patch_error_context(doc: DocumentState, proposal: PatchProposal) -> str:
+    span = proposal.span_abs
+    text = doc.text
+    if span is None:
+        around = None
+    else:
+        start, end = span
+        lo = max(0, start - 120)
+        hi = min(len(text), end + 120)
+        around = text[lo:hi]
+    payload = (
+        proposal.payload_norm
+        if proposal.payload_norm is not None
+        else proposal.payload
+    )
+    payload_preview = (payload or "")[:120]
+    return (
+        f"doc_len={len(text)}\n"
+        f"  span_abs={proposal.span_abs}\n"
+        f"  op={proposal.op.value}\n"
+        f"  rule_id={proposal.rule_id}\n"
+        f"  candidate_id={proposal.candidate_id}\n"
+        f"  candidate_label={proposal.candidate_label}\n"
+        f"  payload_preview={payload_preview!r}\n"
+        f"  around_span={around!r}\n"
+        f"  document_tail={text[-300:]!r}"
+    )
+
+
 def apply_patch(doc: DocumentState, proposal: PatchProposal) -> DocumentState:
     """Apply ``proposal`` to ``doc`` while preserving immutable state semantics.
 
@@ -170,17 +199,24 @@ def apply_patch(doc: DocumentState, proposal: PatchProposal) -> DocumentState:
 
     """
     if proposal.base_version_id != doc.version_id:
-        raise ValueError("base version mismatch")
+        raise ValueError(
+            "base version mismatch:\n  " + _patch_error_context(doc, proposal)
+        )
 
     if proposal.op == PatchOp.NOOP:
         return doc
 
     if proposal.span_abs is None:
-        raise ValueError("span_abs required for non-noop")
+        raise ValueError(
+            "span_abs required for non-noop:\n  "
+            + _patch_error_context(doc, proposal)
+        )
 
     start, end = proposal.span_abs
     if start < 0 or end < start or end > len(doc.text):
-        raise ValueError("span out of bounds")
+        raise ValueError(
+            "span out of bounds:\n  " + _patch_error_context(doc, proposal)
+        )
 
     payload_norm = (
         proposal.payload_norm

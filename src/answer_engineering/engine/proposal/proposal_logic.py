@@ -23,6 +23,7 @@ Architectural TODO:
 from __future__ import annotations
 
 import hashlib
+import logging
 import re
 import string
 from collections.abc import Sequence
@@ -48,6 +49,12 @@ from answer_engineering.engine.runtime.runtime_types import (
     TextView,
     TokenCharAlignment,
 )
+from answer_engineering.engine.span_utils import (
+    describe_span,
+    is_valid_span,
+    normalize_span,
+    validate_token_alignment,
+)
 from answer_engineering.inference.model_types import TextCodec
 from answer_engineering.rules.compile.plan import (
     AnchorQuerySpec,
@@ -56,6 +63,7 @@ from answer_engineering.rules.compile.plan import (
 )
 
 _PARENTHETICAL_SUFFIX_PATTERN = re.compile(r"[,.!?*]+")
+_LOG = logging.getLogger(__name__)
 
 
 def _candidate_hash(spec: CandidateSpec) -> str:
@@ -337,6 +345,41 @@ class StandardProposalGenerator:
                 span=span,
                 op=chosen.op,
             )
+            if span_for_candidate is None:
+                _LOG.warning(
+                    "invalid_span_dropped rule_id=%s rule_name=%r candidate=%r",
+                    rule.rule_id,
+                    rule.name,
+                    chosen.label,
+                )
+                continue
+            if not is_valid_span(span_for_candidate, doc.text):
+                fixed = normalize_span(
+                    span_for_candidate,
+                    doc.text,
+                    fallback=span,
+                    mode="fallback_then_clamp",
+                )
+                if fixed.span is None:
+                    _LOG.warning(
+                        (
+                            "invalid_span_dropped rule_id=%s "
+                            "rule_name=%r candidate=%r span=%s"
+                        ),
+                        rule.rule_id,
+                        rule.name,
+                        chosen.label,
+                        span_for_candidate,
+                    )
+                    continue
+                _LOG.warning(
+                    "%s rule_id=%s original_span=%s corrected_span=%s",
+                    fixed.reason or "invalid_span_clamped",
+                    rule.rule_id,
+                    span_for_candidate,
+                    fixed.span,
+                )
+                span_for_candidate = fixed.span
             candidate_text = _maybe_adjust_after_parenthetical_candidate(
                 text=doc.text,
                 span=span_for_candidate,
@@ -517,28 +560,107 @@ def _compute_target_span(
 
 def _snap_span_to_token_boundaries(
     *, ctx: StepContext, span: tuple[int, int], op: PatchOp
-) -> tuple[int, int]:
-    """Snap an edit span to token boundaries when alignment information is.
+) -> tuple[int, int] | None:
+    """Snap an edit span to safe token boundaries, or drop if unsafe."""
+    text = ctx.doc.text
+    original_result = normalize_span(span, text, mode="clamp")
+    if original_result.span is None:
+        _LOG.warning(
+            "invalid_span_dropped rule_id=%s rule_name=%r %s",
+            ctx.rule.rule_id,
+            ctx.rule.name,
+            describe_span(span, text),
+        )
+        return None
+    if original_result.changed:
+        _LOG.warning(
+            "%s rule_id=%s rule_name=%r original_span=%s corrected_span=%s "
+            "doc_len=%s %s",
+            original_result.reason or "invalid_span_clamped",
+            ctx.rule.rule_id,
+            ctx.rule.name,
+            original_result.original,
+            original_result.span,
+            len(text),
+            describe_span(original_result.original, text),
+        )
+    original = original_result.span
 
-    Purpose:
-        Preserve tokenizer- or incremental-alignment safety for edits that would
-        otherwise cut through token boundaries.
+    if op == PatchOp.REPLACE and original[0] == original[1]:
+        return original
+    if not text:
+        return original
 
-    """
-    if op == PatchOp.REPLACE and span[0] == span[1]:
-        return span
-    if not ctx.doc.text:
-        return span
-    aligned = _snap_span_with_incremental_alignment(
-        span=span,
-        alignment=ctx.step.generated_token_alignment,
-        op=op,
+    aligned: tuple[int, int] | None = None
+    alignment_error = validate_token_alignment(
+        ctx.step.generated_token_alignment, text
     )
+    if alignment_error is not None:
+        _LOG.warning(
+            "invalid_incremental_alignment "
+            "invalid_incremental_snap_fallback_tokenizer "
+            "rule_id=%s rule_name=%r "
+            "original_span=%s doc_len=%s error=%s %s",
+            ctx.rule.rule_id,
+            ctx.rule.name,
+            span,
+            len(text),
+            alignment_error,
+            describe_span(span, text),
+        )
+    else:
+        aligned = _snap_span_with_incremental_alignment(
+            span=original,
+            alignment=ctx.step.generated_token_alignment,
+            op=op,
+        )
     if aligned is not None:
-        return aligned
-    return _snap_span_with_tokenizer_offsets(
-        text=ctx.doc.text, span=span, tokenizer=ctx.tokenizer, op=op
+        if is_valid_span(aligned, text):
+            return aligned
+        _LOG.warning(
+            "invalid_incremental_snap_fallback_tokenizer rule_id=%s "
+            "rule_name=%r original_span=%s incremental_span=%s doc_len=%s %s",
+            ctx.rule.rule_id,
+            ctx.rule.name,
+            span,
+            aligned,
+            len(text),
+            describe_span(aligned, text),
+        )
+
+    tokenizer_span = _snap_span_with_tokenizer_offsets(
+        text=text, span=original, tokenizer=ctx.tokenizer, op=op
     )
+    if is_valid_span(tokenizer_span, text):
+        return tokenizer_span
+    _LOG.warning(
+        "invalid_tokenizer_snap_fallback_original rule_id=%s "
+        "tokenizer_span=%s doc_len=%s",
+        ctx.rule.rule_id,
+        tokenizer_span,
+        len(text),
+    )
+
+    if is_valid_span(original, text):
+        return original
+    fallback_result = normalize_span(original, text, mode="clamp")
+    if fallback_result.span is not None:
+        _LOG.warning(
+            (
+                "invalid_span_clamped rule_id=%s "
+                "original_span=%s corrected_span=%s"
+            ),
+            ctx.rule.rule_id,
+            original,
+            fallback_result.span,
+        )
+        return fallback_result.span
+    _LOG.warning(
+        "invalid_span_dropped rule_id=%s %s",
+        ctx.rule.rule_id,
+        describe_span(original, text),
+    )
+    return None
 
 
 def _snap_span_with_incremental_alignment(
@@ -554,9 +676,9 @@ def _snap_span_with_incremental_alignment(
         offset recomputation.
 
     """
+    start, end = span
     if not alignment:
         return None
-    start, end = span
     if start > end:
         return span
 
@@ -590,15 +712,18 @@ def _snap_span_with_incremental_alignment(
     right = _contains(end)
 
     if op == PatchOp.INSERT_BEFORE and left is not None:
-        return (left[0], left[0])
+        snapped = (left[0], left[0])
+        return snapped
     if op == PatchOp.INSERT_AFTER and right is not None:
-        return (right[1], right[1])
+        snapped = (right[1], right[1])
+        return snapped
 
     snapped_start = left[0] if left is not None else start
     snapped_end = right[1] if right is not None else end
+    snapped = (snapped_start, snapped_end)
     if snapped_start == start and snapped_end == end:
         return None
-    return (snapped_start, snapped_end)
+    return snapped
 
 
 def _snap_span_with_tokenizer_offsets(
@@ -615,6 +740,7 @@ def _snap_span_with_tokenizer_offsets(
         unavailable or insufficient.
 
     """
+    start, end = span
     if tokenizer is None:
         return span
     try:
@@ -623,7 +749,6 @@ def _snap_span_with_tokenizer_offsets(
         ).offsets
     except (TypeError, ValueError):
         return span
-    start, end = span
     if not offsets:
         return span
 
@@ -634,29 +759,27 @@ def _snap_span_with_tokenizer_offsets(
     except ValueError:
         return span
 
+    snapped = span
     if op == PatchOp.INSERT_BEFORE:
         if tok_start < len(offsets):
             token_char_start, _ = offsets[tok_start]
             if token_char_start < start:
-                return (token_char_start, token_char_start)
-        return span
-    if op == PatchOp.INSERT_AFTER:
+                snapped = (token_char_start, token_char_start)
+    elif op == PatchOp.INSERT_AFTER:
         if tok_end > 0:
             _, token_char_end = offsets[tok_end - 1]
             if token_char_end > end:
-                return (token_char_end, token_char_end)
-        return span
+                snapped = (token_char_end, token_char_end)
+    elif tok_start < len(offsets):
+        snapped_start, _ = offsets[tok_start]
+        if tok_end > 0:
+            _, snapped_end = offsets[tok_end - 1]
+        else:
+            snapped_end = snapped_start
+        if snapped_end >= snapped_start:
+            snapped = (snapped_start, snapped_end)
 
-    if tok_start >= len(offsets):
-        return span
-    snapped_start, _ = offsets[tok_start]
-    if tok_end > 0:
-        _, snapped_end = offsets[tok_end - 1]
-    else:
-        snapped_end = snapped_start
-    if snapped_end < snapped_start:
-        return span
-    return (snapped_start, snapped_end)
+    return snapped
 
 
 def _would_change(
@@ -827,6 +950,16 @@ def _maybe_extend_after_span_until_parenthesis_close(
         after- style edit.
 
     """
+
+    def _defer() -> tuple[tuple[int, int], str]:
+        return span, "waiting_for_closing_parenthesis"
+
+    def _changed(
+        new_span: tuple[int, int], reason: str
+    ) -> tuple[tuple[int, int], None]:
+        del reason
+        return new_span, None
+
     if not ctx.rule.wait_for_closing_parenthesis:
         return span, None
 
@@ -853,7 +986,7 @@ def _maybe_extend_after_span_until_parenthesis_close(
 
     if depth == 0:
         if idx >= ctx.edit_view.abs_end and span_depth > 0:
-            return span, "waiting_for_closing_parenthesis"
+            return _defer()
         if idx >= ctx.edit_view.abs_end or text[idx] != "(":
             rel_idx = 0
             while rel_idx < len(span_text) and span_text[rel_idx].isspace():
@@ -864,7 +997,7 @@ def _maybe_extend_after_span_until_parenthesis_close(
                     index=span[0] + rel_idx + 1,
                     max_end=ctx.edit_view.abs_end,
                 )
-                return (end, end), None
+                return _changed((end, end), "leading_closing_parenthesis")
 
             open_offset = span_text.find("(")
             if open_offset < 0:
@@ -876,7 +1009,10 @@ def _maybe_extend_after_span_until_parenthesis_close(
                     )
                 )
                 if normalized_insert_at is not None:
-                    return (normalized_insert_at, normalized_insert_at), None
+                    return _changed(
+                        (normalized_insert_at, normalized_insert_at),
+                        "normalized_after_parenthetical_insertion_point",
+                    )
                 return span, None
 
             local_depth = 0
@@ -893,19 +1029,19 @@ def _maybe_extend_after_span_until_parenthesis_close(
                         break
 
             if close_offset is None:
-                return span, "waiting_for_closing_parenthesis"
+                return _defer()
 
             end = _consume_trailing_parenthetical_suffix(
                 text=text,
                 index=span[0] + close_offset + 1,
                 max_end=ctx.edit_view.abs_end,
             )
-            return (end, end), None
+            return _changed((end, end), "closed_parenthetical_in_span")
     search_start = span[0]
     while search_start < ctx.edit_view.abs_end and text[search_start].isspace():
         search_start += 1
     if search_start >= ctx.edit_view.abs_end:
-        return span, "waiting_for_closing_parenthesis"
+        return _defer()
 
     close_idx: int | None = None
     for pos in range(search_start, ctx.edit_view.abs_end):
@@ -920,14 +1056,14 @@ def _maybe_extend_after_span_until_parenthesis_close(
                 break
 
     if close_idx is None:
-        return span, "waiting_for_closing_parenthesis"
+        return _defer()
 
     end = _consume_trailing_parenthetical_suffix(
         text=text,
         index=close_idx + 1,
         max_end=ctx.edit_view.abs_end,
     )
-    return (end, end), None
+    return _changed((end, end), "closed_parenthetical_after_span")
 
 
 def _consume_trailing_parenthetical_suffix(

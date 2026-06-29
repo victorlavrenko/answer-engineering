@@ -14,6 +14,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from answer_engineering.engine.patching import patch_canonical, patcher
+from answer_engineering.engine.patching.proposals import PatchProposal
 from answer_engineering.engine.pipeline.events import (
     Event,
     PatchApplied,
@@ -29,6 +30,28 @@ from answer_engineering.engine.runtime.runtime_types import (
     DocumentState,
     PatchOp,
 )
+from answer_engineering.engine.span_utils import (
+    describe_span,
+    is_valid_span,
+    normalize_span,
+)
+
+
+def _skip_event(
+    *,
+    proposal: PatchProposal,
+    current_doc: DocumentState,
+    reason: str,
+) -> PatchSkipped:
+    return PatchSkipped(
+        rule_id=proposal.rule_id,
+        reason=reason,
+        doc_len=len(current_doc.text),
+        original_span=proposal.span_abs,
+        span_abs=proposal.span_abs,
+        nearby_text=describe_span(proposal.span_abs, current_doc.text),
+        stage="apply",
+    )
 
 
 @dataclass(slots=True)
@@ -106,7 +129,42 @@ class ApplyStage:
         )
         for offset, proposal in enumerate(ordered):
             old_version = current_doc.version_id
+
             try:
+                if proposal.base_version_id != doc.version_id:
+                    emitted_events.append(
+                        _skip_event(
+                            proposal=proposal,
+                            current_doc=current_doc,
+                            reason="proposal_base_version_mismatch",
+                        )
+                    )
+                    continue
+                if proposal.op != PatchOp.NOOP and not is_valid_span(
+                    proposal.span_abs, current_doc.text
+                ):
+                    if proposal.span_abs is None:
+                        emitted_events.append(
+                            _skip_event(
+                                proposal=proposal,
+                                current_doc=current_doc,
+                                reason="invalid_span_dropped",
+                            )
+                        )
+                        continue
+                    fixed = normalize_span(
+                        proposal.span_abs, current_doc.text, mode="drop"
+                    )
+                    if fixed.span is None:
+                        emitted_events.append(
+                            _skip_event(
+                                proposal=proposal,
+                                current_doc=current_doc,
+                                reason="invalid_span_dropped",
+                            )
+                        )
+                        continue
+                    proposal = proposal.with_updates(span_abs=fixed.span)
                 rebased = proposal.with_updates(
                     base_version_id=current_doc.version_id
                 )
@@ -128,9 +186,19 @@ class ApplyStage:
                     proposal=proposal,
                     new_version_id=next_doc.version_id,
                 )
-            except ValueError as exc:
+            except ValueError:
                 emitted_events.append(
-                    PatchSkipped(rule_id=proposal.rule_id, reason=str(exc))
+                    PatchSkipped(
+                        rule_id=proposal.rule_id,
+                        reason="patcher_rejected_proposal",
+                        doc_len=len(current_doc.text),
+                        original_span=proposal.span_abs,
+                        span_abs=proposal.span_abs,
+                        nearby_text=describe_span(
+                            proposal.span_abs, current_doc.text
+                        ),
+                        stage="apply",
+                    )
                 )
                 continue
 

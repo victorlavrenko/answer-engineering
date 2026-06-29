@@ -77,6 +77,7 @@ class TokenCharAlignment:
     char_start: int
     char_end: int
     piece_text: str
+    token_id: int | None = None
 
 
 @dataclass(frozen=True, slots=True, init=False)

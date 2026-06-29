@@ -63,8 +63,18 @@ class TokenizedTextWithOffsets:
         encoded = tokenizer(
             text, add_special_tokens=False, return_offsets_mapping=True
         )
-        object.__setattr__(self, "token_ids", encoded["input_ids"])
-        object.__setattr__(self, "offsets", encoded["offset_mapping"])
+        token_ids = list(encoded["input_ids"])
+        offsets = list(encoded["offset_mapping"])
+        if len(token_ids) != len(offsets):
+            raise ValueError("token id / offset length mismatch")
+        for i, (start, end) in enumerate(offsets):
+            if not 0 <= start <= end <= len(text):
+                raise ValueError(
+                    "offset out of bounds at token "
+                    f"{i}: {(start, end)} doc_len={len(text)}"
+                )
+        object.__setattr__(self, "token_ids", token_ids)
+        object.__setattr__(self, "offsets", offsets)
 
 
 def char_span_to_token_span(
@@ -103,16 +113,16 @@ def char_span_to_token_span(
             return 0, 0
         raise ValueError("cannot map non-empty span with empty token offsets")
 
+    for i, (os, oe) in enumerate(offsets):
+        if os < 0 or oe < os:
+            raise ValueError(f"invalid offset at token {i}: {(os, oe)}")
     text_end = max(item[1] for item in offsets)
     if end > text_end:
         raise ValueError(f"span end {end} exceeds text length {text_end}")
 
-    tok_start = next(
-        (i for i, (_, oe) in enumerate(offsets) if oe > start), None
-    )
-    tok_end = next(
-        (i for i, (os, _) in enumerate(offsets) if os >= end), len(offsets)
-    )
+    non_empty = [(i, os, oe) for i, (os, oe) in enumerate(offsets) if oe > os]
+    tok_start = next((i for i, _, oe in non_empty if oe > start), None)
+    tok_end = next((i for i, os, _ in non_empty if os >= end), len(offsets))
 
     if tok_start is None:
         if start == end == text_end:

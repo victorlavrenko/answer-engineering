@@ -545,34 +545,24 @@ class PatchApplied(Event):
 
 @dataclass(frozen=True, slots=True)
 class PatchSkipped(Event):
-    """Event emitted when a patch is skipped in apply phase.
+    """Event emitted when a patch/span is corrected or skipped.
 
     Purpose:
-        Capture one structured runtime observation as immutable data rather than
-        encoding it as ad-hoc debug text.
-
-    Architectural role:
-        Telemetry event in the execution-pipeline observability boundary. It
-        records why an accepted-looking patch did not produce a document
-        mutation.
-
-    Inputs (architectural provenance):
-        Populated by the stage or runtime collaborator that owns the observed
-        lifecycle transition.
-
-    Outputs (downstream usage):
-        Serialized by event sinks and consumed by debugging, telemetry
-        snapshots, golden tests, and reproduction artifacts.
-
-    Invariants/constraints:
-        The reason should be stable enough for reporting and golden assertions.
-        The event is data-only: it must not mutate runtime state, control stage
-        ordering, or compute follow-up decisions.
+        Capture stable, structured diagnostics for recoverable span or proposal
+        drops so normal runtime generation remains observable without relying
+        only on human-readable logs.
 
     """
 
-    rule_id: str
+    rule_id: str | None
     reason: str
+    rule_name: str | None = None
+    doc_len: int | None = None
+    original_span: tuple[int, int] | None = None
+    corrected_span: tuple[int, int] | None = None
+    span_abs: tuple[int, int] | None = None
+    nearby_text: str | None = None
+    stage: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
