@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from importlib.metadata import PackageNotFoundError, version
+
 import answer_engineering
 from ae_paper_reproduction.api import (
     Dataset,
@@ -14,6 +16,15 @@ from answer_engineering import (
     GenerationRuntime,
 )
 from answer_engineering.rules.parse.parser import MarkdownRulesParser
+
+
+def test_top_level_version_matches_installed_metadata() -> None:
+    try:
+        expected_version = version("answer-engineering")
+    except PackageNotFoundError:
+        expected_version = "0+unknown"
+
+    assert answer_engineering.__version__ == expected_version
 
 
 def test_public_api_imports_and_minimal_calls() -> None:

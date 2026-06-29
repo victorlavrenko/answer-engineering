@@ -1,10 +1,10 @@
 [build-system]
-requires = ["hatchling>=1.20"]
+requires = ["hatchling>=1.20", "hatch-vcs>=0.4"]
 build-backend = "hatchling.build"
 
 [project]
 name = "answer-engineering"
-version = "0.1.0"
+dynamic = ["version"]
 description = "Rule-guided trajectory editing for protocol-constrained LLM generation."
 readme = "README.md"
 requires-python = ">=3.12"
@@ -37,6 +37,12 @@ dev = [
 hf = [
   "huggingface_hub[hf_xet]",
 ]
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.version.raw-options]
+local_scheme = "no-local-version"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/answer_engineering", "src/ae_paper_reproduction"]

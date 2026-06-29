@@ -66,6 +66,8 @@ Todo:
 
 from __future__ import annotations
 
+from importlib.metadata import PackageNotFoundError, version
+
 from answer_engineering.inference.answering import GenerationRuntime
 from answer_engineering.inference.contracts import (
     GenerationPolicy,
@@ -74,7 +76,10 @@ from answer_engineering.inference.contracts import (
 )
 from answer_engineering.rules.compile.compiled_rules import CompiledRules
 
-__version__ = "0.1.0"
+try:
+    __version__ = version("answer-engineering")
+except PackageNotFoundError:
+    __version__ = "0+unknown"
 
 __all__ = [
     "__version__",
