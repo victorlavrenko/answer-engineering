@@ -34,3 +34,19 @@ def test_no_any_usage_in_src_package() -> None:
 def test_no_crlf_line_endings() -> None:
     matches = find_crlf_line_endings(_repo_root())
     assert matches == []
+
+
+def test_crlf_ignored_directories_are_relative_to_root(
+    tmp_path: Path,
+) -> None:
+    root = tmp_path / "repo"
+    source_file = root / "src" / "bad.py"
+    ignored_file = root / "tmp" / "ignored.py"
+    source_file.parent.mkdir(parents=True)
+    ignored_file.parent.mkdir(parents=True)
+    source_file.write_bytes(b"x = 1\r\n")
+    ignored_file.write_bytes(b"x = 2\r\n")
+
+    matches = find_crlf_line_endings(root)
+
+    assert [match.path for match in matches] == [source_file]

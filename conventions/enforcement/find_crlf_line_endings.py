@@ -43,6 +43,7 @@ def find_crlf_line_endings(root: Path) -> list[CrlfMatch]:
     """
     matches: list[CrlfMatch] = []
     for path in root.rglob("*"):
+        relative_parts = path.relative_to(root).parts
         if not path.is_file() or any(
             part
             in {
@@ -57,7 +58,7 @@ def find_crlf_line_endings(root: Path) -> list[CrlfMatch]:
                 "build",
                 "tmp",
             }
-            for part in path.parts
+            for part in relative_parts
         ):
             continue
         data = path.read_bytes()
