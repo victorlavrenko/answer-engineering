@@ -29,4 +29,6 @@ set -x
 "${PYTHON}" -m pyright
 "${PYTHON}" -m pylint --rcfile conventions/pylintrc src
 "${PYTHON}" -m pytest
+rm -rf build dist
+git describe --tags --long --dirty --match "v[0-9]*" || true
 "${PYTHON}" -m build
