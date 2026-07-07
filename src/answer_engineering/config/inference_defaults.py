@@ -80,7 +80,7 @@ class ProbeDefaults:
     beams_per_group: int = 3
     diversity_penalty: float = 2.0
     use_group_beam_search: bool = True
-    group_beam_search_repo_id: str = "transformers-community/group-beam-search"
+    group_beam_search_repo_id: str = "lavrenko/group-beam-search"
     group_beam_search_revision: str | None = None
     preload_group_beam_search: bool = False
 
