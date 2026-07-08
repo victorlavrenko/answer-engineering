@@ -156,7 +156,7 @@ Decision Making in Large Language Models}
   \small \texttt{a\_molodnitskaia@rambam.health.gov.il}
 }
 
-\date{June 19, 2026}
+\date{July 8, 2026}
 
 \begin{document}
 
@@ -170,20 +170,23 @@ Decision Making in Large Language Models}
   systematically underused. This effect arises across multiple protocol-driven
   domains; here, we evaluate it on a clinical benchmark requiring differential
   diagnosis using a binary adherence endpoint. In this task, compliant outcomes
-  for the target condition decreased from 54.5\% under unguided generation to
-  25.1\% under a step-by-step reasoning baseline, while performance on the
-  contrastive condition increased from 1.6\% to 58.9\%. We hypothesize that
-  reliability can be improved by intervening locally during generation,
-  selecting valid reasoning trajectories and enforcing required tokens when
-  violations occur. This hypothesis is implemented not as a new decoding
-  algorithm but as a deterministic runtime and authoring layer over standard
-  autoregressive generation, using rule-guided localized interventions to steer
-  greedy decoding toward protocol-compliant trajectories without retraining or
-  global search. In this workflow, localized trajectory intervention increased
-  compliant outcomes for the target condition from 25.1\% to 83.5\% and
-  increased protocol adherence on the contrastive condition from 58.9\% to
-  77.9\%, suggesting that failures are consistent with structural violations
-  that can be corrected through domain-specific protocols.
+  for the target condition decreased from \SSNHLBaselineAcceptedPct{} under
+  unguided generation to \SSNHLReasoningAcceptedPct{} under a step-by-step
+  reasoning baseline, while performance on the contrastive condition increased
+  from \ConductiveBaselineAcceptedPct{} to \ConductiveReasoningAcceptedPct{}. We
+  hypothesize that reliability can be improved by intervening locally during
+  generation, selecting valid reasoning trajectories and enforcing required
+  tokens when violations occur. This hypothesis is implemented not as a new
+  decoding algorithm but as a deterministic runtime and authoring layer over
+  standard autoregressive generation, using rule-guided localized interventions
+  to steer greedy decoding toward protocol-compliant trajectories without
+  retraining or global search. In this workflow, localized trajectory
+  intervention increased compliant outcomes for the target condition from
+  \SSNHLReasoningAcceptedPct{} to \SSNHLTrajectoryAcceptedPct{} and increased
+  protocol adherence on the contrastive condition from
+  \ConductiveReasoningAcceptedPct{} to \ConductiveTrajectoryAcceptedPct{},
+  suggesting that failures are consistent with structural violations that can be
+  corrected through domain-specific protocols.
 \end{abstract}
 
 \section{Introduction}\label{sec:introduction}
@@ -1682,8 +1685,8 @@ protocol-consistent reasoning and management.
   mechanism.}\label{tab:ssnhl-results}
 \end{table*}
 
-Table~\ref{tab:ssnhl-results} summarizes performance across progressively more
-localized intervention mechanisms applied to the generation process. The
+Table~\ref{tab:ssnhl-results} summarizes performance across intervention
+mechanisms that vary in timing, locality, and degree of coordination. The
 evaluated configurations range from prompt-level adjustments to trajectory-level
 coordination of validation and repair.
 
@@ -1746,13 +1749,16 @@ generating full alternative outputs and selecting among them, local validation
 detects protocol violations at intermediate points in the trajectory and can
 trigger corrective actions without regenerating the entire response.
 
-In the present evaluation, this earlier detection does not produce a substantial
-shift in diagnostic acceptance rates relative to global validation, indicating
-that the timing of validation alone does not materially alter the underlying
-decision bias of the model. However, local validation provides a clear
-operational advantage: violations can be identified and addressed incrementally,
-resulting in reduced regeneration overhead and improved runtime efficiency
-compared with output-level validation.
+In the present evaluation, earlier detection does not yield a clear diagnostic
+acceptance advantage over global validation: local validation achieves
+\SSNHLLocalValidationAcceptedPct{} acceptance compared with
+\SSNHLGlobalValidationAcceptedPct{} for global validation. This indicates that
+changing the timing of validation alone is not sufficient to materially alter
+the underlying decision bias of the model. Local validation does, however,
+provide a clear operational advantage, reducing slowdown from
+\SSNHLGlobalValidationSlowdownX{} to \SSNHLLocalValidationSlowdownX{} by
+identifying and addressing violations incrementally rather than regenerating
+complete outputs.
 
 \paragraph{Manual Replace + After only}
 
@@ -1800,13 +1806,16 @@ across task variants. This contrastive adherence effect is particularly
 informative because a rule set that merely favored or injected the SSNHL
 endpoint would be expected to degrade conductive cases rather than improve them.
 
-Across configurations, protocol-constrained behavior becomes progressively more
-stable as intervention mechanisms become more localized and coordinated. This
-pattern is consistent with many observed incorrect decisions being compatible
-with premature or inconsistent reasoning trajectories rather than missing
-medical knowledge alone. In this controlled benchmark, stabilizing these
-trajectories during decoding restores protocol-consistent outcomes in a large
-fraction of cases.
+The ablation does not indicate that localization alone monotonically improves
+protocol compliance. Global and local validation produce acceptance rates in the
+same general range, while direct Replace and After interventions do not produce
+a comparable gain when used without local validation. The substantially larger
+gain appears only when local validation is coordinated with direct trajectory
+repair. This pattern suggests that the benefit arises from combining local
+detection with the ability to modify and propagate corrections through the
+reasoning trajectory, rather than from earlier validation alone. In this
+controlled benchmark, coordinated trajectory intervention restores
+protocol-consistent outcomes in a large fraction of cases.
 
 \subsection{Runtime telemetry and intervention behavior}
 
