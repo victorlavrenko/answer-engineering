@@ -33,7 +33,11 @@ type GenerationMode = Literal["baseline", "reasoning", "trajectory"]
 type PaperRole = Literal["primary", "ablation", "appendix", "exploratory"]
 
 try:
-    from google.colab import _message as _colab_message_module
+    from google.colab import (  # pyright: ignore[reportMissingModuleSource]
+        _message,  # pyright: ignore[reportMissingModuleSource]
+    )
+
+    _colab_message_module = _message
 except ImportError:
     _colab_message_module = None
 

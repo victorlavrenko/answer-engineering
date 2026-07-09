@@ -46,10 +46,11 @@ from ae_paper_reproduction.core.evaluation.reports import (
 )
 from ae_paper_reproduction.core.evaluation.result_types import DatasetRow
 from ae_paper_reproduction.core.evaluation.run_session import SubrunSession
-from ae_paper_reproduction.core.planning import notebook_extractor
 from ae_paper_reproduction.core.planning.notebook_extractor import (
     GenerationMode,
+    NotebookRulesetSpec,
     PaperRole,
+    extract_answer_engineering_subruns_from_ipynb,
 )
 from ae_paper_reproduction.infra.datasets.datasets import Dataset
 from answer_engineering import (
@@ -132,7 +133,7 @@ class SubrunDefinition:
 
     """
 
-    ruleset: notebook_extractor.NotebookRulesetSpec
+    ruleset: NotebookRulesetSpec
     case_type: str | None
     index: int
     notebook_path: str
@@ -985,7 +986,7 @@ class Subrun:
     _last_task_count: int | None = field(default=None, init=False, repr=False)
 
     @property
-    def ruleset(self) -> notebook_extractor.NotebookRulesetSpec:
+    def ruleset(self) -> NotebookRulesetSpec:
         """Notebook ruleset spec bound to this subrun.
 
         Purpose:
@@ -1621,11 +1622,7 @@ class NotebookSubruns:
 
         """
         notebook_path = str(_resolve_notebook_fallback_path(fallback))
-        specs = (
-            notebook_extractor.extract_answer_engineering_subruns_from_ipynb(
-                notebook_path
-            )
-        )
+        specs = extract_answer_engineering_subruns_from_ipynb(notebook_path)
         self.notebook_path = notebook_path
         self.dataset = dataset
         self.model = model
@@ -1734,7 +1731,7 @@ __all__ = [
 
 
 def _require_subrun_mode(
-    ruleset: notebook_extractor.NotebookRulesetSpec,
+    ruleset: NotebookRulesetSpec,
     notebook_path: str,
 ) -> GenerationMode:
     """Require explicit mode metadata for notebook-derived subruns."""

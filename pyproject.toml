@@ -76,14 +76,14 @@ extraPaths = ["src"]
 venvPath = "."
 venv = ".venv"
 
-reportMissingTypeStubs = "none"
-reportMissingModuleSource = "none"
-reportUnsupportedDunderAll = "none"
+# Additional hardening beyond strict mode.
+reportMissingModuleSource = "error"
+reportImportCycles = "error"
+reportUnnecessaryTypeIgnoreComment = "error"
 
-reportUnusedFunction = "error"
-reportUnusedClass = "error"
-reportUnusedImport = "error"
-reportUnusedVariable = "error"
+# Disallow broad "# type: ignore"; targeted "# pyright: ignore[rule]"
+# remains available.
+enableTypeIgnoreComments = false
 
 executionEnvironments = [
   { root = "src", extraPaths = ["src", "."] },

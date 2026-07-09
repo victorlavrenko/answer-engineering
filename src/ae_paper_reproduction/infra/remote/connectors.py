@@ -45,7 +45,11 @@ from huggingface_hub import CommitOperationAdd, HfApi, login
 from ae_paper_reproduction.config.hf_defaults import HuggingFaceDefaults
 
 try:
-    from google.colab import userdata as _colab_userdata_module
+    from google.colab import (  # pyright: ignore[reportMissingModuleSource]
+        userdata as _userdata,  # pyright: ignore[reportMissingModuleSource]
+    )
+
+    _colab_userdata_module = _userdata
 except ImportError:
     _colab_userdata_module = None
 

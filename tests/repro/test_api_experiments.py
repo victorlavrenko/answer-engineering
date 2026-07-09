@@ -51,7 +51,7 @@ def test_dataset_rows_supports_n_and_question_id(
         *args: object, **kwargs: object
     ) -> hf_datasets.Dataset:
         del args, kwargs
-        return hf_datasets.Dataset.from_list(  # pyright: ignore[reportUnknownMemberType]
+        return hf_datasets.Dataset.from_list(
             cast(list[dict[str, object]], rows)
         )
 
@@ -79,7 +79,7 @@ def test_dataset_load_caches_rows(monkeypatch: pytest.MonkeyPatch) -> None:
         del args, kwargs
         nonlocal calls
         calls += 1
-        return hf_datasets.Dataset.from_list(  # pyright: ignore[reportUnknownMemberType]
+        return hf_datasets.Dataset.from_list(
             cast(list[dict[str, object]], rows)
         )
 
@@ -202,7 +202,7 @@ def test_subrun_iter_tasks_compiles_once_and_builds_results(
         *args: object, **kwargs: object
     ) -> hf_datasets.Dataset:
         del args, kwargs
-        return hf_datasets.Dataset.from_list(  # pyright: ignore[reportUnknownMemberType]
+        return hf_datasets.Dataset.from_list(
             cast(list[dict[str, object]], list(_iter_dataset_rows()))
         )
 
@@ -331,7 +331,7 @@ def test_low_level_question_debug_flow_stays_minimal(
         *args: object, **kwargs: object
     ) -> hf_datasets.Dataset:
         del args, kwargs
-        return hf_datasets.Dataset.from_list(  # pyright: ignore[reportUnknownMemberType]
+        return hf_datasets.Dataset.from_list(
             cast(list[dict[str, object]], list(_iter_dataset_rows()))
         )
 
