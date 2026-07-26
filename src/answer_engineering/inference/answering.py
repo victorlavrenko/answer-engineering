@@ -96,6 +96,7 @@ class _TokenizerLoader(Protocol):
         revision: str | None = ...,
         use_fast: bool = ...,
         trust_remote_code: bool = ...,
+        clean_up_tokenization_spaces: bool = ...,
     ) -> ChatTextCodec: ...
 
 
@@ -379,6 +380,7 @@ class GenerationRuntime(ChatGenerationRuntime):
                     revision=self.revision,
                     use_fast=True,
                     trust_remote_code=self.trust_remote_code,
+                    clean_up_tokenization_spaces=False,
                 )
                 if tokenizer.pad_token_id is None:
                     mutable_tokenizer = cast(_PadTokenCodec, tokenizer)
