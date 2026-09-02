@@ -1,0 +1,81 @@
+name: Import Instruction Duplication research package
+
+on:
+  push:
+    branches:
+      - instruction-duplication-arxiv-v1-prep
+    paths:
+      - .github/workflows/import-instruction-duplication.yml
+
+permissions:
+  contents: write
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out Answer Engineering
+        uses: actions/checkout@v4
+        with:
+          ref: instruction-duplication-arxiv-v1-prep
+          fetch-depth: 0
+
+      - name: Fetch frozen Instruction Duplication source
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --no-checkout https://github.com/victorlavrenko/instruction-duplication.git /tmp/instruction-duplication
+          git -C /tmp/instruction-duplication checkout cbb55629e53802056ac7554ccd5b9a11f39beb7f
+
+      - name: Import source, tests, and scientific documentation
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          rm -rf src/instruction_duplication
+          cp -a /tmp/instruction-duplication/src/instruction_duplication src/
+
+          rm -rf tests/instruction_duplication
+          mkdir -p tests/instruction_duplication
+          cp /tmp/instruction-duplication/tests/conftest.py tests/instruction_duplication/conftest.py
+          cp /tmp/instruction-duplication/tests/test_*.py tests/instruction_duplication/
+
+          mkdir -p tools/instruction_duplication
+          cp /tmp/instruction-duplication/tools/verify_release.py tools/instruction_duplication/
+          cp /tmp/instruction-duplication/tools/aaai27_robustness_analysis.py tools/instruction_duplication/
+          cp /tmp/instruction-duplication/tools/aaai27_human_validation.py tools/instruction_duplication/
+          cp /tmp/instruction-duplication/tools/analyze_human_validation.py tools/instruction_duplication/
+
+          mkdir -p docs/paper/instruction-duplication/reproduction
+          cp /tmp/instruction-duplication/docs/experiment.md docs/paper/instruction-duplication/reproduction/
+          cp /tmp/instruction-duplication/docs/final-experiment-configuration.json docs/paper/instruction-duplication/reproduction/
+          cp /tmp/instruction-duplication/docs/FINAL_EXPERIMENT_CONFIGURATION.md docs/paper/instruction-duplication/reproduction/
+          cp /tmp/instruction-duplication/docs/paper-run-parameters.md docs/paper/instruction-duplication/reproduction/
+          cp /tmp/instruction-duplication/docs/providers.md docs/paper/instruction-duplication/reproduction/
+          cp /tmp/instruction-duplication/docs/THIRD_PARTY.md docs/paper/instruction-duplication/reproduction/
+          cp /tmp/instruction-duplication/requirements-research.lock docs/paper/instruction-duplication/reproduction/
+
+          cat > docs/paper/instruction-duplication/reproduction/SOURCE_PROVENANCE.md <<'EOF'
+          # Source provenance
+
+          The `src/instruction_duplication/` package in this repository is an exact source snapshot imported from:
+
+          - repository: `victorlavrenko/instruction-duplication`
+          - commit: `cbb55629e53802056ac7554ccd5b9a11f39beb7f`
+          - package version: `3.0.13`
+
+          Generated run archives were intentionally not imported into Git. Frozen paper outputs belong in the GitHub Release associated with the paper tag.
+          EOF
+
+          # This workflow is a one-time migration mechanism; do not leave it in the final tree.
+          rm .github/workflows/import-instruction-duplication.yml
+
+      - name: Commit imported snapshot
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "feat(duplication): vendor paper experiment source and tests"
+          git push origin HEAD:instruction-duplication-arxiv-v1-prep
