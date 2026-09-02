@@ -28,6 +28,7 @@ This documentation is organized by audience and by purpose.
 
 ### Readers who want the current truth
 
+- [Instruction Duplication paper and reproduction](paper/instruction-duplication/README.md)
 - [Architecture](current/architecture.md)
 - [Capabilities](current/capabilities.md)
 - [Runtime model](current/runtime-model.md)

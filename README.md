@@ -224,6 +224,16 @@ Then validate the repository:
 
 Contribution and validation details are in [CONTRIBUTING.md](CONTRIBUTING.md). CI is defined in [`.github/workflows/ci.yml`](.github/workflows/ci.yml).
 
+## Instruction Duplication preprint
+
+The repository also contains the research code and reproduction entry points for **Instruction Duplication as an Inference-Time Control Primitive**.
+
+- [paper-specific reproduction guide](docs/paper/instruction-duplication/README.md)
+- [instruction-placement reproduction notebook](notebooks/instruction-placement-reproduction.ipynb)
+- [open the placement notebook in Google Colab](https://colab.research.google.com/github/victorlavrenko/answer-engineering/blob/main/notebooks/instruction-placement-reproduction.ipynb)
+
+Large frozen outputs are intentionally kept out of Git history and are distributed through the paper-specific tagged GitHub Release.
+
 ## Reproducing the paper
 
 The main reproduction entry point is:
