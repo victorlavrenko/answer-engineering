@@ -18,6 +18,9 @@ dependencies = [
   "tqdm>=4.66",
   "lark>=1.1",
   "huggingface_hub>=0.23",
+  "numpy>=2.0,<3",
+  "httpx>=0.28.1,<1",
+  "packaging>=26.3,<27",
 ]
 
 [project.optional-dependencies]
@@ -38,6 +41,9 @@ hf = [
   "huggingface_hub[hf_xet]",
 ]
 
+[project.scripts]
+instruction-duplication = "instruction_duplication.cli:main"
+
 [tool.hatch.version]
 source = "vcs"
 
@@ -45,11 +51,20 @@ source = "vcs"
 local_scheme = "no-local-version"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/answer_engineering", "src/ae_paper_reproduction"]
+packages = [
+  "src/answer_engineering",
+  "src/ae_paper_reproduction",
+  "src/instruction_duplication",
+]
 
 [tool.ruff]
 target-version = "py312"
 line-length = 80
+exclude = [
+  "src/instruction_duplication",
+  "tests/instruction_duplication",
+  "tools/instruction_duplication",
+]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM", "ARG", "D"]
