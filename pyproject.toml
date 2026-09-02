@@ -63,7 +63,7 @@ line-length = 80
 exclude = [
   "src/instruction_duplication",
   "tests/instruction_duplication",
-  "tools/instruction_duplication",
+  "scripts/instruction_duplication",
 ]
 
 [tool.ruff.lint]
@@ -79,11 +79,19 @@ indent-style = "space"
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["B905", "D"]
-"tools/**" = ["UP040"]
 
 [tool.pyright]
 include = ["src", "tests", "scripts"]
-exclude = ["dist", ".venv", "**/node_modules", "**/__pycache__", "**/.*"]
+exclude = [
+  "dist",
+  ".venv",
+  "**/node_modules",
+  "**/__pycache__",
+  "**/.*",
+  "src/instruction_duplication",
+  "tests/instruction_duplication",
+  "scripts/instruction_duplication",
+]
 pythonVersion = "3.12"
 typeCheckingMode = "strict"
 stubPath = "stubs"
