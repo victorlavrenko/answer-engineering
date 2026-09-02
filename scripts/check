@@ -27,7 +27,7 @@ set -x
 "${PYTHON}" -m ruff format --check .
 "${PYTHON}" -m ruff check .
 "${PYTHON}" -m pyright
-"${PYTHON}" -m pylint --rcfile conventions/pylintrc src
+"${PYTHON}" -m pylint --rcfile conventions/pylintrc src/answer_engineering src/ae_paper_reproduction
 "${PYTHON}" -m pytest
 rm -rf build dist
 git describe --tags --long --dirty --match "v[0-9]*" || true
