@@ -1,0 +1,88 @@
+name: Verify frozen Instruction Duplication run
+
+on:
+  push:
+    branches:
+      - instruction-duplication-arxiv-v1-prep
+    paths:
+      - .github/workflows/verify-instruction-duplication-frozen-run.yml
+
+permissions:
+  contents: write
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: instruction-duplication-arxiv-v1-prep
+          fetch-depth: 0
+
+      - name: Install integrated research package
+        run: |
+          python -m pip install -U pip
+          python -m pip install -e ".[dev]"
+
+      - name: Fetch and verify frozen primary run
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --no-checkout https://github.com/victorlavrenko/instruction-duplication.git /tmp/id-src
+          git -C /tmp/id-src checkout cbb55629e53802056ac7554ccd5b9a11f39beb7f
+          mkdir -p /tmp/frozen
+          tar -xzf /tmp/id-src/rejudged-3.0.13.tgz -C /tmp/frozen
+          workspace=/tmp/frozen/run-2026-08-12
+
+          instruction-duplication status --workspace "$workspace" > /tmp/status.txt
+          instruction-duplication analyze --workspace "$workspace" > /tmp/analyze.txt
+
+          python - <<'PY'
+          from pathlib import Path
+          import json
+
+          workspace = Path('/tmp/frozen/run-2026-08-12')
+          cells = workspace / 'results' / 'cells-and-judgments.jsonl'
+          rows = [json.loads(line) for line in cells.open(encoding='utf-8')]
+          assert len(rows) == 16800, len(rows)
+
+          analysis = json.loads((workspace / 'results' / 'analysis.json').read_text(encoding='utf-8'))
+          print('generation_schedule', analysis.get('generation_schedule'))
+          print('sample', analysis.get('sample'))
+          print('status', analysis.get('status'))
+          print('human_validation', analysis.get('human_validation'))
+
+          text = (workspace / 'results' / 'paper-report.txt').read_text(encoding='utf-8')
+          print('--- paper report ---')
+          print(text)
+
+          required_fragments = [
+              '16,800',
+              '16,646',
+              '90.22',
+              '93.17',
+              '73.44',
+              '74.81',
+              '60.21',
+          ]
+          missing = [frag for frag in required_fragments if frag not in text]
+          if missing:
+              raise SystemExit(f'paper report missing expected headline fragments: {missing}')
+          print('PRIMARY_HEADLINE_FRAGMENTS=ok')
+          PY
+
+          echo '--- status ---'
+          cat /tmp/status.txt
+          echo '--- analyze ---'
+          cat /tmp/analyze.txt
+
+      - name: Remove one-time verification workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm .github/workflows/verify-instruction-duplication-frozen-run.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "chore: remove one-time frozen-run verification workflow"
+          git push origin HEAD:instruction-duplication-arxiv-v1-prep
