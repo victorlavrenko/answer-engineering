@@ -1,0 +1,60 @@
+name: Index Instruction Duplication paper
+
+on:
+  push:
+    branches:
+      - instruction-duplication-arxiv-v1-prep
+    paths:
+      - .github/workflows/index-instruction-duplication.yml
+
+permissions:
+  contents: write
+
+jobs:
+  update-indexes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: instruction-duplication-arxiv-v1-prep
+          fetch-depth: 0
+
+      - name: Update repository and documentation indexes
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+
+          root = Path('README.md')
+          text = root.read_text(encoding='utf-8')
+          marker = '## Instruction Duplication preprint'
+          if marker not in text:
+              anchor = '## Reproducing the paper\n'
+              section = '''## Instruction Duplication preprint\n\nThe repository also contains the research code and reproduction entry points for **Instruction Duplication as an Inference-Time Control Primitive**.\n\n- [paper-specific reproduction guide](docs/paper/instruction-duplication/README.md)\n- [instruction-placement reproduction notebook](notebooks/instruction-placement-reproduction.ipynb)\n- [open the placement notebook in Google Colab](https://colab.research.google.com/github/victorlavrenko/answer-engineering/blob/main/notebooks/instruction-placement-reproduction.ipynb)\n\nLarge frozen outputs are intentionally kept out of Git history and are distributed through the paper-specific tagged GitHub Release.\n\n'''
+              if anchor not in text:
+                  raise SystemExit('README anchor not found')
+              text = text.replace(anchor, section + anchor, 1)
+              root.write_text(text, encoding='utf-8')
+
+          docs = Path('docs/README.md')
+          dtext = docs.read_text(encoding='utf-8')
+          dmarker = '- [Instruction Duplication paper and reproduction](paper/instruction-duplication/README.md)'
+          if dmarker not in dtext:
+              anchor = '### Readers who want the current truth\n\n'
+              if anchor not in dtext:
+                  raise SystemExit('docs README anchor not found')
+              dtext = dtext.replace(
+                  anchor,
+                  anchor + dmarker + '\n',
+                  1,
+              )
+              docs.write_text(dtext, encoding='utf-8')
+          PY
+
+          rm .github/workflows/index-instruction-duplication.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "docs: index instruction duplication preprint"
+          git push origin HEAD:instruction-duplication-arxiv-v1-prep
