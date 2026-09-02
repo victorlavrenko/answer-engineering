@@ -1,0 +1,116 @@
+{
+  "completed_cells": 1680,
+  "method": "legacy 2026-08-05 smoke envelope with loop-bounding per-model ceilings; Mistral Large ceiling corrected from 1792 to 2304 using the later 2026-08-10 240-cell stop-completion sample; other ceilings remain unchanged",
+  "models": {
+    "gemma-3-12b": {
+      "cells": 240,
+      "output_tokens": {
+        "max": 919,
+        "median": 584.0,
+        "p95": 803.1999999999996,
+        "p99": 911.61
+      },
+      "request_output_tokens": 1280
+    },
+    "llama-3.3-70b-instruct": {
+      "cells": 240,
+      "output_tokens": {
+        "max": 896,
+        "median": 609.0,
+        "p95": 756.05,
+        "p99": 838.5399999999997
+      },
+      "request_output_tokens": 1280
+    },
+    "llama-4-scout": {
+      "cells": 240,
+      "output_tokens": {
+        "max": 962,
+        "median": 513.5,
+        "p95": 661.3,
+        "p99": 732.4399999999999
+      },
+      "request_output_tokens": 1280
+    },
+    "ministral-3-14b-2512": {
+      "cells": 240,
+      "output_tokens": {
+        "max": 3375,
+        "median": 887.0,
+        "p95": 2024.549999999999,
+        "p99": 2762.7199999999993
+      },
+      "request_output_tokens": 4352
+    },
+    "mistral-large-3-2512": {
+      "cells": 240,
+      "output_tokens": {
+        "max": 1309,
+        "median": 762.0,
+        "p95": 1040.6499999999999,
+        "p99": 1184.4699999999996
+      },
+      "request_output_tokens": 2304
+    },
+    "qwen3-235b-a22b-instruct-2507": {
+      "cells": 240,
+      "output_tokens": {
+        "max": 2214,
+        "median": 769.5,
+        "p95": 1123.7999999999997,
+        "p99": 1326.8799999999999
+      },
+      "request_output_tokens": 2816
+    },
+    "qwen3-30b-a3b-instruct-2507": {
+      "cells": 240,
+      "output_tokens": {
+        "max": 1698,
+        "median": 801.0,
+        "p95": 1181.8999999999996,
+        "p99": 1396.3999999999994
+      },
+      "request_output_tokens": 2304
+    }
+  },
+  "overall": {
+    "input_tokens": {
+      "max": 1701,
+      "median": 819.0,
+      "p95": 1309.0,
+      "p99": 1517.0
+    },
+    "output_tokens": {
+      "max": 3375,
+      "median": 682.5,
+      "p95": 1210.1999999999998,
+      "p99": 1974.3600000000006
+    }
+  },
+  "profile_id": "run.tgz-2026-08-05-plus-2026-08-10-ceiling-fix-v1",
+  "provenance": {
+    "active_protocol_hash": "86b92dcf90caef0528ec7270c28bcd50f65e2a9bbc187ea8348824f06001b4c1",
+    "compatibility": "provisional_cross_protocol",
+    "source_archive": "run.tgz",
+    "source_archive_sha256": "b486d2431aefeed2d5ca1740eb89bdcb1f5a138b9a33703b266e0ad21c71dceb",
+    "source_protocol_hash": null,
+    "source_protocol_identity": "not_recorded_by_legacy_workspace"
+  },
+  "schema_version": 2,
+  "supplemental_ceiling_evidence": {
+    "source": "instruction-duplication 2.5.2 current-protocol smoke, 2026-08-10",
+    "source_protocol_hash": "652365b5d8daa71def41f564b5e550ef2739a8e8b58ef2f3c48574ad1cbcf8f6",
+    "mistral-large-3-2512": {
+      "completed_stop_cells": 240,
+      "output_tokens_max": 1663,
+      "output_tokens_p99": 1504.35,
+      "validated_request_output_tokens": 2304
+    },
+    "qwen3-235b-a22b-instruct-2507": {
+      "provider_reported_tokens_above_request_cells": 8,
+      "observed_effective_output_usd_per_million_max": 0.6188,
+      "conservative_fallback_output_usd_per_million": 0.62
+    },
+    "compatibility": "cross_protocol_supporting_evidence"
+  }
+}
