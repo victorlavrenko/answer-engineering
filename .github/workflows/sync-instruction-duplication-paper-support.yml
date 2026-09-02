@@ -1,0 +1,57 @@
+name: Sync Instruction Duplication paper support
+
+on:
+  push:
+    branches:
+      - instruction-duplication-arxiv-v1-prep
+    paths:
+      - .github/workflows/sync-instruction-duplication-paper-support.yml
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: instruction-duplication-arxiv-v1-prep
+          fetch-depth: 0
+
+      - name: Fetch frozen upstream source
+        run: |
+          set -euo pipefail
+          git clone --no-checkout https://github.com/victorlavrenko/instruction-duplication.git /tmp/id-src
+          git -C /tmp/id-src checkout cbb55629e53802056ac7554ccd5b9a11f39beb7f
+
+      - name: Sync reproduction support files
+        run: |
+          set -euo pipefail
+          mkdir -p tools/instruction_duplication scripts/instruction_duplication docs/paper/instruction-duplication/reproduction
+          cp /tmp/id-src/tools/*.py tools/instruction_duplication/
+          if compgen -G '/tmp/id-src/scripts/*.py' > /dev/null; then
+            cp /tmp/id-src/scripts/*.py scripts/instruction_duplication/
+          fi
+          find /tmp/id-src/docs -maxdepth 1 -type f \( -name '*.md' -o -name '*.json' \) -exec cp {} docs/paper/instruction-duplication/reproduction/ \;
+          cp /tmp/id-src/REPRODUCE.md docs/paper/instruction-duplication/reproduction/REPRODUCE.md
+          cp /tmp/id-src/requirements-research.lock docs/paper/instruction-duplication/reproduction/requirements-research.lock
+
+          cat > docs/paper/instruction-duplication/reproduction/SOURCE_PROVENANCE.md <<'EOF'
+          # Source provenance
+
+          The Instruction Duplication research package in this repository is vendored from:
+
+          - repository: `victorlavrenko/instruction-duplication`
+          - commit: `cbb55629e53802056ac7554ccd5b9a11f39beb7f`
+          - package version: `3.0.13`
+
+          The arXiv paper uses the final AAAI-27 code/data supplement as the authoritative frozen-data package. Large generated outputs are intentionally distributed outside Git history through the paper release.
+          EOF
+
+          rm .github/workflows/sync-instruction-duplication-paper-support.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "docs(duplication): sync paper reproduction utilities"
+          git push origin HEAD:instruction-duplication-arxiv-v1-prep
