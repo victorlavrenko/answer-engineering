@@ -5,6 +5,7 @@ on:
     branches: [main]
     tags:
       - "v*"
+      - "instruction-duplication-*"
   pull_request:
   workflow_dispatch:
     inputs:
@@ -85,4 +86,5 @@ jobs:
           . .pkgtest/bin/activate
           python -m pip install -U pip
           python -m pip install dist/*.whl
-          python -c "import answer_engineering; import ae_paper_reproduction"
+          python -c "import answer_engineering; import ae_paper_reproduction; import instruction_duplication"
+          instruction-duplication --help >/dev/null
