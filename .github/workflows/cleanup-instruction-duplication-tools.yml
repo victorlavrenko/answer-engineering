@@ -1,0 +1,41 @@
+name: Normalize Instruction Duplication paper scripts
+
+on:
+  push:
+    branches:
+      - instruction-duplication-arxiv-v1-prep
+    paths:
+      - .github/workflows/cleanup-instruction-duplication-tools.yml
+
+permissions:
+  contents: write
+
+jobs:
+  normalize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: instruction-duplication-arxiv-v1-prep
+          fetch-depth: 0
+
+      - name: Normalize paper-specific script hierarchy
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p scripts/instruction_duplication
+          if [[ -f tools/instruction_duplication/aaai27_robustness_analysis.py ]]; then
+            git mv tools/instruction_duplication/aaai27_robustness_analysis.py scripts/instruction_duplication/robustness_analysis.py
+          fi
+          if [[ -f tools/instruction_duplication/analyze_human_validation.py ]]; then
+            git mv tools/instruction_duplication/analyze_human_validation.py scripts/instruction_duplication/analyze_human_validation.py
+          fi
+          rm -rf tools/instruction_duplication
+          rmdir tools 2>/dev/null || true
+          rm .github/workflows/cleanup-instruction-duplication-tools.yml
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "refactor(duplication): normalize paper script hierarchy"
+          git push origin HEAD:instruction-duplication-arxiv-v1-prep
