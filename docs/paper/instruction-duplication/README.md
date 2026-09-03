@@ -6,6 +6,7 @@ This directory is the paper-specific entry point for the Instruction Duplication
 
 - LaTeX source: [`main.tex`](main.tex)
 - Rendered PDF: [`paper.pdf`](paper.pdf)
+- Stable rendered-PDF alias: [`instruction_duplication_arxiv.pdf`](instruction_duplication_arxiv.pdf)
 - Frozen source tag: `instruction-duplication-arxiv-v1`
 - Frozen experiment artifacts: [GitHub Release `instruction-duplication-arxiv-v1`](https://github.com/victorlavrenko/answer-engineering/releases/tag/instruction-duplication-arxiv-v1)
 
@@ -80,10 +81,10 @@ Frozen operational endpoints:
 - **SSNHL target:** the lowercased response contains `steroid`. Dose, route, urgency, and appropriateness are not separately scored.
 - **Conductive contrast:** the response contains `conductive` and contains neither `senso` nor `ssnhl`. This tests diagnostic branch preservation only; it does not test steroid absence or conductive-treatment correctness.
 
-| Scope | System-only AE | AE + trailing duplicate | Paired changes |
-|---|---:|---:|---:|
-| SSNHL target | 842/1000 (84.2%) | 971/1000 (97.1%) | 154 improved / 25 degraded |
-| Conductive branch preservation | 786/1000 (78.6%) | 738/1000 (73.8%) | 153 improved / 201 degraded |
+| Scope | Published no-editing baseline | System-only AE | AE + trailing duplicate | Paired AE changes |
+|---|---:|---:|---:|---:|
+| SSNHL target | 25.1% | 842/1000 (84.2%) | 971/1000 (97.1%) | 154 improved / 25 degraded |
+| Conductive branch preservation | 58.9% | 786/1000 (78.6%) | 738/1000 (73.8%) | 153 improved / 201 degraded |
 
 The AE artifact embeds the exact question text in each result row, so a second question-only release asset is unnecessary.
 
