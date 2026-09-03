@@ -19,3 +19,11 @@ docs/paper/**
 !docs/paper/*.bib
 !docs/paper/*.pdf
 !docs/paper/chktexrc
+
+# Paper-specific source/reproduction material for the Instruction Duplication preprint.
+!docs/paper/instruction-duplication/
+!docs/paper/instruction-duplication/*.md
+!docs/paper/instruction-duplication/*.tex
+!docs/paper/instruction-duplication/*.pdf
+!docs/paper/instruction-duplication/reproduction/
+!docs/paper/instruction-duplication/reproduction/**
