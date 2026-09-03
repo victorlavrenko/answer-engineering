@@ -5,7 +5,7 @@ This directory is the paper-specific entry point for the Instruction Duplication
 ## Paper and frozen source
 
 - LaTeX source: [`main.tex`](main.tex)
-- Rendered PDF: [`instruction_duplication_arxiv.pdf`](instruction_duplication_arxiv.pdf)
+- Rendered PDF: [`paper.pdf`](paper.pdf)
 - Frozen source tag: `instruction-duplication-arxiv-v1`
 - Frozen experiment artifacts: [GitHub Release `instruction-duplication-arxiv-v1`](https://github.com/victorlavrenko/answer-engineering/releases/tag/instruction-duplication-arxiv-v1)
 
