@@ -19,3 +19,10 @@ docs/paper/**
 !docs/paper/*.bib
 !docs/paper/*.pdf
 !docs/paper/chktexrc
+
+# Published Instruction Duplication preprint
+!docs/paper/instruction-duplication/
+!docs/paper/instruction-duplication/README.md
+!docs/paper/instruction-duplication/main.tex
+!docs/paper/instruction-duplication/paper.pdf
+!docs/paper/instruction-duplication/instruction_duplication_arxiv.pdf
