@@ -163,7 +163,7 @@ To suppress warnings, you can set a line-level comment:
 
 ```python
 def do_PUT(self):  # WSGI name, so pylint: disable=invalid-name
-  ...
+    ...
 ```
 
 `pylint`
@@ -267,6 +267,7 @@ For example the module `sound.effects.echo` may be imported as follows:
 
 ```python
 from sound.effects import echo
+
 ...
 echo.EchoFilter(input, output, delay=0.7, atten=4)
 ```
@@ -1185,6 +1186,7 @@ An example of the use of this feature is:
 ```python
 def get_adder(summand1: float) -> Callable[[float], float]:
     """Returns a function that adds numbers to a given number."""
+
     def adder(summand2: float) -> float:
         return summand1 + summand2
 
@@ -1211,14 +1213,17 @@ Can lead to confusing bugs, such as this example based on
 
 ```python
 i = 4
+
+
 def foo(x: Iterable[int]):
     def bar():
-        print(i, end='')
+        print(i, end="")
+
     # ...
     # A bunch of code here
     # ...
     for i in x:  # Ah, i *is* local to foo, so this is what bar sees
-        print(i, end='')
+        print(i, end="")
     bar()
 ```
 
@@ -1575,8 +1580,16 @@ Note that this rule doesn't prohibit backslash-escaped newlines within strings
 (see [below](#strings)).
 
 ```python
-Yes: foo_bar(self, width, height, color='black', design=None, x='foo',
-             emphasis=None, highlight=0)
+Yes: foo_bar(
+    self,
+    width,
+    height,
+    color="black",
+    design=None,
+    x="foo",
+    emphasis=None,
+    highlight=0,
+)
 ```
 
 ```python
@@ -1613,8 +1626,7 @@ When a literal string won't fit on a single line, use parentheses for implicit
 line joining.
 
 ```python
-x = ('This will build a very long long '
-     'long long long long long long string')
+x = "This will build a very long long long long long long long long string"
 ```
 
 Prefer to break lines at the highest possible syntactic level. If you must break
@@ -1816,11 +1828,12 @@ Yes:   golomb3 = [0, 1, 3]
 ```
 
 ```python
-No:    golomb4 = [
-           0,
-           1,
-           4,
-           6,]
+No: golomb4 = [
+    0,
+    1,
+    4,
+    6,
+]
 ```
 
 <a id="s3.5-blank-lines"></a>
@@ -1849,11 +1862,11 @@ Follow standard typographic rules for the use of spaces around punctuation.
 No whitespace inside parentheses, brackets or braces.
 
 ```python
-Yes: spam(ham[1], {'eggs': 2}, [])
+Yes: spam(ham[1], {"eggs": 2}, [])
 ```
 
 ```python
-No:  spam( ham[ 1 ], { 'eggs': 2 }, [ ] )
+No: spam(ham[1], {"eggs": 2}, [])
 ```
 
 No whitespace before a comma, semicolon, or colon. Do use whitespace after a
@@ -1879,15 +1892,15 @@ Yes: spam(1)
 ```
 
 ```python
-No:  spam (1)
+No: spam(1)
 ```
 
 ```python
-Yes: dict['key'] = list[index]
+Yes: dict["key"] = list[index]
 ```
 
 ```python
-No:  dict ['key'] = list [index]
+No: dict["key"] = list[index]
 ```
 
 No trailing whitespace.
@@ -1902,7 +1915,7 @@ Yes: x == 1
 ```
 
 ```python
-No:  x<1
+No: x < 1
 ```
 
 Never use spaces around `=` when passing keyword arguments or defining a default
@@ -2213,29 +2226,32 @@ with at least those differences is required on the overriding method.
 ```python
 from typing_extensions import override
 
+
 class Parent:
-  def do_something(self):
-    """Parent method, includes docstring."""
+    def do_something(self):
+        """Parent method, includes docstring."""
+
 
 # Child class, method annotated with override.
 class Child(Parent):
-  @override
-  def do_something(self):
-    pass
+    @override
+    def do_something(self):
+        pass
 ```
 
 ```python
 # Child class, but without @override decorator, a docstring is required.
 class Child(Parent):
-  def do_something(self):
-    pass
+    def do_something(self):
+        pass
+
 
 # Docstring is trivial, @override is sufficient to indicate that docs can be
 # found in the base class.
 class Child(Parent):
-  @override
-  def do_something(self):
-    """See base class."""
+    @override
+    def do_something(self):
+        """See base class."""
 ```
 
 <a id="s3.8.4-comments-in-classes"></a>
@@ -2285,25 +2301,27 @@ such as that the class is a class.
 ```python
 # Yes:
 class CheeseShopAddress:
-  """The address of a cheese shop.
+    """The address of a cheese shop.
 
-  ...
-  """
+    ...
+    """
+
 
 class OutOfCheeseError(Exception):
-  """No more cheese is available."""
+    """No more cheese is available."""
 ```
 
 ```python
 # No:
 class CheeseShopAddress:
-  """Class that describes the address of a cheese shop.
+    """Class that describes the address of a cheese shop.
 
-  ...
-  """
+    ...
+    """
+
 
 class OutOfCheeseError(Exception):
-  """Raised when no more cheese is available."""
+    """Raised when no more cheese is available."""
 ```
 
 <a id="s3.8.5-block-and-inline-comments"></a>
@@ -2786,8 +2804,8 @@ from otherproject.ai import mind
 from otherproject.ai import soul
 
 # Older style code may have these imports down here instead:
-#from myproject.backend.hgwells import time_machine
-#from myproject.backend.state_machine import main_loop
+# from myproject.backend.hgwells import time_machine
+# from myproject.backend.state_machine import main_loop
 ```
 
 
@@ -3071,23 +3089,26 @@ When using [absl](https://github.com/abseil/abseil-py), use `app.run`:
 
 ```python
 from absl import app
+
 ...
+
 
 def main(argv: Sequence[str]):
     # process non-flag arguments
     ...
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     app.run(main)
 ```
 
 Otherwise, use:
 
 ```python
-def main():
-    ...
+def main(): ...
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()
 ```
 
@@ -3142,13 +3163,12 @@ the function into smaller and more manageable pieces.
     ```python
     from typing import Self
 
-    class BaseClass:
-      @classmethod
-      def create(cls) -> Self:
-        ...
 
-      def difference(self, other: Self) -> float:
-        ...
+    class BaseClass:
+        @classmethod
+        def create(cls) -> Self: ...
+
+        def difference(self, other: Self) -> float: ...
     ```
 
 *   Similarly, don't feel compelled to annotate the return value of `__init__`
@@ -3186,8 +3206,7 @@ def my_method(
     first_var: int,
     second_var: Foo,
     third_var: Bar | None,
-) -> int:
-  ...
+) -> int: ...
 ```
 
 Always prefer breaking between variables, and not, for example, between variable
@@ -3195,8 +3214,7 @@ names and type annotations. However, if everything fits on the same line, go for
 it.
 
 ```python
-def my_method(self, first_var: int) -> int:
-  ...
+def my_method(self, first_var: int) -> int: ...
 ```
 
 If the combination of the function name, the last parameter, and the return type
@@ -3242,12 +3260,9 @@ too long to be on a single line (try to keep sub-types unbroken).
 ```python
 def my_method(
     self,
-    first_var: tuple[list[MyLongType1],
-                     list[MyLongType2]],
-    second_var: list[dict[
-        MyLongType3, MyLongType4]],
-) -> None:
-  ...
+    first_var: tuple[list[MyLongType1], list[MyLongType2]],
+    second_var: list[dict[MyLongType3, MyLongType4]],
+) -> None: ...
 ```
 
 If a single name and type is too long, consider using an
@@ -3455,25 +3470,32 @@ Example:
 ```python
 from collections.abc import Callable
 from typing import ParamSpec, TypeVar
+
 _P = ParamSpec("_P")
 _T = TypeVar("_T")
 ...
+
+
 def next(l: list[_T]) -> _T:
-  return l.pop()
+    return l.pop()
+
 
 def print_when_called(f: Callable[_P, _T]) -> Callable[_P, _T]:
-  def inner(*args: _P.args, **kwargs: _P.kwargs) -> _T:
-    print("Function was called")
-    return f(*args, **kwargs)
-  return inner
+    def inner(*args: _P.args, **kwargs: _P.kwargs) -> _T:
+        print("Function was called")
+        return f(*args, **kwargs)
+
+    return inner
 ```
 
 A `TypeVar` can be constrained:
 
 ```python
 AddableType = TypeVar("AddableType", int, float, str)
+
+
 def add(a: AddableType, b: AddableType) -> AddableType:
-  return a + b
+    return a + b
 ```
 
 A common predefined type variable in the `typing` module is `AnyStr`. Use it for
@@ -3481,10 +3503,12 @@ multiple annotations that can be `bytes` or `str` and must all be the same type.
 
 ```python
 from typing import AnyStr
+
+
 def check_length(x: AnyStr) -> AnyStr:
-  if len(x) <= 42:
-    return x
-  raise ValueError()
+    if len(x) <= 42:
+        return x
+    raise ValueError()
 ```
 
 A type variable must have a descriptive name, unless it meets all of the
@@ -3522,10 +3546,8 @@ Use `str` for string/text data. For code that deals with binary data, use
 `bytes`.
 
 ```python
-def deals_with_text_data(x: str) -> str:
-  ...
-def deals_with_binary_data(x: bytes) -> bytes:
-  ...
+def deals_with_text_data(x: str) -> str: ...
+def deals_with_binary_data(x: bytes) -> bytes: ...
 ```
 
 If all the string types of a function are always the same, for example if the
@@ -3607,8 +3629,11 @@ TYPE_CHECKING:` block.
 -   Sort this list as if it were a regular imports list.
 ```python
 import typing
+
 if typing.TYPE_CHECKING:
-  import sketch
+    import sketch
+
+
 def f(x: "sketch.Sketch"): ...
 ```
 
@@ -3635,8 +3660,8 @@ from typing import Any
 some_mod = Any  # some_mod.py imports this module.
 ...
 
-def my_method(self, var: "some_mod.SomeType") -> None:
-  ...
+
+def my_method(self, var: "some_mod.SomeType") -> None: ...
 ```
 
 <a id="typing-generics"></a>
@@ -3653,15 +3678,13 @@ parameter list; otherwise, the generics' parameters will be assumed to be
 
 ```python
 # Yes:
-def get_names(employee_ids: Sequence[int]) -> Mapping[int, str]:
-  ...
+def get_names(employee_ids: Sequence[int]) -> Mapping[int, str]: ...
 ```
 
 ```python
 # No:
 # This is interpreted as get_names(employee_ids: Sequence[Any]) -> Mapping[Any, Any]
-def get_names(employee_ids: Sequence) -> Mapping:
-  ...
+def get_names(employee_ids: Sequence) -> Mapping: ...
 ```
 
 If the best type parameter for a generic is `Any`, make it explicit, but
@@ -3671,14 +3694,16 @@ appropriate:
 ```python
 # No:
 def get_names(employee_ids: Sequence[Any]) -> Mapping[Any, str]:
-  """Returns a mapping from employee ID to employee name for given IDs."""
+    """Returns a mapping from employee ID to employee name for given IDs."""
 ```
 
 ```python
 # Yes:
-_T = TypeVar('_T')
+_T = TypeVar("_T")
+
+
 def get_names(employee_ids: Sequence[_T]) -> Mapping[_T, str]:
-  """Returns a mapping from employee ID to employee name for given IDs."""
+    """Returns a mapping from employee ID to employee name for given IDs."""
 ```
 
 

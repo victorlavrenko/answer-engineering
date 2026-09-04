@@ -741,7 +741,6 @@ from typing import Protocol
 
 
 class TextCodec(Protocol):
-
     def encode(self, text: str) -> bytes:
         """Encode text into tokens."""
         raise NotImplementedError

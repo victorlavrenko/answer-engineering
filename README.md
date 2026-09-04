@@ -189,7 +189,11 @@ For the full grammar, modifiers, guard operators, scope syntax, options, and tem
 ## Minimal shape
 
 ```python
-from answer_engineering import GenerationRuntime, GenerationRequest, GenerationPolicy
+from answer_engineering import (
+    GenerationRuntime,
+    GenerationRequest,
+    GenerationPolicy,
+)
 
 runtime = GenerationRuntime(MODEL_ID)
 answer = runtime.generate(
